@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  posix file api for rom data.
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -57,6 +57,7 @@ rom_file_t* rom_fopen_buff(const uint8_t* data, uint32_t capacity) {
 size_t rom_fread(void* ptr, size_t size, size_t nitems, rom_file_t* f) {
   size_t available = 0;
   size_t nr = size * nitems;
+  return_value_if_fail(size > 0, 0);
   return_value_if_fail(ptr != NULL && f != NULL, 0);
 
   available = f->capacity - f->cursor;

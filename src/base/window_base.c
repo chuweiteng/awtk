@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  window_base
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -97,9 +97,6 @@ ret_t window_base_get_prop(widget_t* widget, const char* name, value_t* v) {
   } else if (tk_str_eq(name, WIDGET_PROP_ASSETS_MANAGER)) {
     value_set_pointer(v, (void*)(assets_manager()));
     return RET_OK;
-  } else if (tk_str_eq(name, WIDGET_PROP_SCRIPT)) {
-    value_set_str(v, window_base->script);
-    return RET_OK;
   } else if (tk_str_eq(name, WIDGET_PROP_STAGE)) {
     value_set_int(v, window_base->stage);
     return RET_OK;
@@ -128,9 +125,6 @@ ret_t window_base_set_prop(widget_t* widget, const char* name, const value_t* v)
   } else if (tk_str_eq(name, WIDGET_PROP_THEME)) {
     window_base->theme = tk_str_copy(window_base->theme, value_str(v));
     return RET_OK;
-  } else if (tk_str_eq(name, WIDGET_PROP_SCRIPT)) {
-    window_base->script = tk_str_copy(window_base->script, value_str(v));
-    return RET_OK;
   } else if (tk_str_eq(name, WIDGET_PROP_CLOSABLE)) {
     if (v->type == VALUE_TYPE_STRING) {
       const key_type_value_t* kv = window_closable_type_find(value_str(v));
@@ -146,10 +140,9 @@ ret_t window_base_set_prop(widget_t* widget, const char* name, const value_t* v)
   return RET_NOT_FOUND;
 }
 
-ret_t window_base_destroy(widget_t* widget) {
+ret_t window_base_on_destroy(widget_t* widget) {
   window_base_t* window_base = WINDOW_BASE(widget);
 
-  TKMEM_FREE(window_base->script);
   TKMEM_FREE(window_base->theme);
   TKMEM_FREE(window_base->open_anim_hint);
   TKMEM_FREE(window_base->close_anim_hint);
@@ -186,20 +179,20 @@ ret_t window_base_on_event(widget_t* widget, event_t* e) {
   return RET_OK;
 }
 
-widget_t* window_base_init(widget_t* widget, widget_t* parent, const widget_vtable_t* vt, xy_t x,
-                           xy_t y, wh_t w, wh_t h) {
+widget_t* window_base_create(widget_t* parent, const widget_vtable_t* vt, xy_t x, xy_t y, wh_t w,
+                             wh_t h) {
+  widget_t* widget = widget_create(NULL, vt, x, y, w, h);
   window_base_t* win = WINDOW_BASE(widget);
 
   return_value_if_fail(win != NULL, NULL);
 
-  widget_init(widget, NULL, vt, x, y, w, h);
   if (parent == NULL) {
     parent = window_manager();
   }
 
   return_value_if_fail(window_manager_open_window(parent, widget) == RET_OK, NULL);
-
   win->stage = WINDOW_STAGE_NONE;
+
 #ifdef ENABLE_MEM_LEAK_CHECK
   tk_mem_dump();
 #endif /*ENABLE_MEM_LEAK_CHECK*/

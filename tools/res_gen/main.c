@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  res to c source
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -51,6 +51,13 @@ int main(int argc, char** argv) {
     output_res_c_source(out_filename, ASSET_TYPE_IMAGE, ASSET_TYPE_IMAGE_JPG, input_buff, size);
   } else if (end_with(in_filename, ".gif")) {
     output_res_c_source(out_filename, ASSET_TYPE_IMAGE, ASSET_TYPE_IMAGE_GIF, input_buff, size);
+  } else if (end_with(in_filename, ".js")) {
+    output_res_c_source(out_filename, ASSET_TYPE_SCRIPT, ASSET_TYPE_SCRIPT_JS, input_buff, size);
+  } else if (end_with(in_filename, ".lua")) {
+    output_res_c_source(out_filename, ASSET_TYPE_SCRIPT, ASSET_TYPE_SCRIPT_LUA, input_buff, size);
+  } else if (end_with(in_filename, ".py")) {
+    output_res_c_source(out_filename, ASSET_TYPE_SCRIPT, ASSET_TYPE_SCRIPT_PYTHON, input_buff,
+                        size);
   } else {
     output_res_c_source(out_filename, ASSET_TYPE_DATA, 0, input_buff, size);
   }

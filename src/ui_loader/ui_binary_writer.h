@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  ui_builder write widget info into buffer.
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,11 +27,29 @@
 
 BEGIN_C_DECLS
 
+/**
+ * @class ui_binary_writer_t
+ * @parent ui_builder_t
+ *
+ * 生成二进制格式的UI描述数据。
+ *
+ */
 typedef struct _ui_binary_writer_t {
   ui_builder_t builder;
   wbuffer_t* wbuffer;
 } ui_binary_writer_t;
 
+/**
+ * @method ui_binary_writer_init
+ * @annotation ["constructor"]
+ *
+ * 初始化ui\_binary\_writer对象。
+ *
+ * @param {ui_binary_writer_t*} writer writer对象。
+ * @param {wbuffer_t*} wbuffer 保存结果的buffer。
+ *
+ * @return {ui_builder_t*} 返回ui\_builder对象。
+ */
 ui_builder_t* ui_binary_writer_init(ui_binary_writer_t* writer, wbuffer_t* wbuffer);
 
 END_C_DECLS

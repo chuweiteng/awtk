@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  image_value
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -61,7 +61,7 @@ static ret_t image_value_on_paint_self(widget_t* widget, canvas_t* c) {
   uint32_t i = 0;
   uint32_t nr = 0;
   char sub_name[8];
-  char name[NAME_LEN + 1];
+  char name[TK_NAME_LEN + 1];
   char str[IMAGE_VALUE_MAX_CHAR_NR + 1];
   bitmap_t bitmap[IMAGE_VALUE_MAX_CHAR_NR];
   image_value_t* image_value = IMAGE_VALUE(widget);
@@ -80,7 +80,7 @@ static ret_t image_value_on_paint_self(widget_t* widget, canvas_t* c) {
   nr = strlen(str);
   return_value_if_fail(nr > 0, RET_BAD_PARAMS);
 
-  name[NAME_LEN] = '\0';
+  name[TK_NAME_LEN] = '\0';
   for (i = 0; i < nr; i++) {
     if (str[i] == '.') {
       strcpy(sub_name, IMAGE_VALUE_MAP_DOT);
@@ -91,7 +91,7 @@ static ret_t image_value_on_paint_self(widget_t* widget, canvas_t* c) {
       sub_name[1] = '\0';
     }
 
-    tk_snprintf(name, NAME_LEN, "%s%s", image_value->image, sub_name);
+    tk_snprintf(name, TK_NAME_LEN, "%s%s", image_value->image, sub_name);
     return_value_if_fail(widget_load_image(widget, name, bitmap + i) == RET_OK, RET_BAD_PARAMS);
   }
 
@@ -130,7 +130,7 @@ static ret_t image_value_set_prop(widget_t* widget, const char* name, const valu
   return RET_NOT_FOUND;
 }
 
-static ret_t image_value_destroy(widget_t* widget) {
+static ret_t image_value_on_destroy(widget_t* widget) {
   image_value_t* image_value = IMAGE_VALUE(widget);
 
   TKMEM_FREE(image_value->image);
@@ -142,17 +142,17 @@ static ret_t image_value_destroy(widget_t* widget) {
 static const widget_vtable_t s_image_value_vtable = {.size = sizeof(image_value_t),
                                                      .type = WIDGET_TYPE_IMAGE_VALUE,
                                                      .create = image_value_create,
-                                                     .destroy = image_value_destroy,
+                                                     .on_destroy = image_value_on_destroy,
                                                      .get_prop = image_value_get_prop,
                                                      .set_prop = image_value_set_prop,
                                                      .on_paint_self = image_value_on_paint_self};
 
 widget_t* image_value_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  image_value_t* image_value = TKMEM_ZALLOC(image_value_t);
-  widget_t* widget = WIDGET(image_value);
+  widget_t* widget = widget_create(parent, &s_image_value_vtable, x, y, w, h);
+  image_value_t* image_value = IMAGE_VALUE(widget);
   return_value_if_fail(image_value != NULL, NULL);
 
-  return widget_init(widget, parent, &s_image_value_vtable, x, y, w, h);
+  return widget;
 }
 
 ret_t image_value_set_image(widget_t* widget, const char* image) {

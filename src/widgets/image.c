@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  image
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -99,20 +99,20 @@ static const char* s_image_clone_properties[] = {WIDGET_PROP_IMAGE,      WIDGET_
 
 static const widget_vtable_t s_image_vtable = {.size = sizeof(image_t),
                                                .type = WIDGET_TYPE_IMAGE,
+                                               .enable_pool = TRUE,
                                                .clone_properties = s_image_clone_properties,
                                                .create = image_create,
-                                               .destroy = image_base_destroy,
+                                               .on_destroy = image_base_on_destroy,
                                                .on_event = image_base_on_event,
                                                .on_paint_self = image_on_paint_self,
                                                .set_prop = image_set_prop,
                                                .get_prop = image_get_prop};
 
 widget_t* image_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  image_t* image = TKMEM_ZALLOC(image_t);
-  widget_t* widget = WIDGET(image);
+  widget_t* widget = widget_create(parent, &s_image_vtable, x, y, w, h);
+  image_t* image = IMAGE(widget);
   return_value_if_fail(image != NULL, NULL);
 
-  widget_init(widget, parent, &s_image_vtable, x, y, w, h);
   image_base_init(widget);
   image->draw_type = IMAGE_DRAW_DEFAULT;
 

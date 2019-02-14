@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  utils struct and utils functions.
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -30,6 +30,13 @@ BEGIN_C_DECLS
 int tk_atoi(const char* str);
 bool_t tk_atob(const char* str);
 double tk_atof(const char* str);
+
+int32_t tk_str_cmp(const char* a, const char* b);
+
+int tk_watoi(const wchar_t* str);
+bool_t tk_watob(const wchar_t* str);
+double tk_watof(const wchar_t* str);
+
 const char* tk_skip_to_num(const char* str);
 const char* tk_itoa(char* str, int len, int n);
 const char* tk_ftoa(char* str, int len, double f);
@@ -37,6 +44,7 @@ long tk_strtol(const char* str, const char** end, int base);
 
 char* tk_strncpy(char* dst, const char* src, size_t len);
 char* tk_strdup(const char* str);
+wchar_t* tk_wstrdup(const wchar_t* str);
 
 char* tk_strndup(const char* str, uint32_t len);
 ret_t tk_str_append(char* str, uint32_t max_len, const char* s);
@@ -58,6 +66,16 @@ ret_t xml_file_expand_read(const char* filename, str_t* s);
 /*XXX:
  * 本函数仅供内部使用，可以提高速度，但使用不当极度危险。它要求dst为NULL或内存块的首地址，本函数调用之后，dst可能无效，请保留返回的地址*/
 char* tk_str_copy(char* dst, const char* src);
+
+ret_t dummy_destroy(void* data);
+ret_t default_destroy(void* data);
+int pointer_compare(const void* a, const void* b);
+
+bool_t tk_is_valid_name(const char* name);
+ret_t tk_replace_locale(const char* name, char out[TK_NAME_LEN + 1], const char* locale);
+
+bool_t tk_str_start_with(const char* str, const char* prefix);
+const char* tk_under_score_to_camel(const char* name, char* out, uint32_t max_out_size);
 
 END_C_DECLS
 

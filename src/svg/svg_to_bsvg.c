@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  svg to  bsvg
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -90,13 +90,13 @@ static void svg_init_shape(bsvg_builder_t* svg, svg_shape_t* shape, const char**
       if (tk_str_eq(v, "transparent")) {
         shape->no_stroke = TRUE;
       } else {
-        shape->stroke = color_parse_simple(v);
+        shape->stroke = color_parse(v);
       }
     } else if (tk_str_eq(k, "fill")) {
       if (tk_str_eq(v, "transparent")) {
         shape->no_fill = TRUE;
       } else {
-        shape->fill = color_parse_simple(v);
+        shape->fill = color_parse(v);
       }
     }
 
@@ -432,6 +432,7 @@ ret_t svg_to_bsvg(const char* xml, uint32_t size, uint32_t** out, uint32_t* out_
 
   *out = buff;
   *out_size = b.bsvg.buff.cursor;
+  xml_parser_destroy(parser);
 
   return RET_OK;
 }

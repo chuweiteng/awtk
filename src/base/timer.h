@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  timer manager
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,63 +22,32 @@
 #ifndef TK_TIMER_H
 #define TK_TIMER_H
 
-#include "tkc/array.h"
+#include "base/timer_manager.h"
 
 BEGIN_C_DECLS
-
-struct _timer_info_t;
-typedef struct _timer_info_t timer_info_t;
-
-typedef uint32_t (*timer_get_time_t)();
-typedef ret_t (*timer_func_t)(const timer_info_t* timer);
-
-typedef struct _timer_manager_t {
-  uint32_t active;
-  bool_t dispatching;
-  uint32_t last_dispatch_time;
-  uint32_t next_timer_id;
-  timer_get_time_t get_time;
-
-  struct _timer_info_t* first;
-} timer_manager_t;
-
-struct _timer_info_t {
-  timer_func_t on_timer;
-  void* ctx;
-  uint32_t id;
-  uint32_t now;
-  uint32_t start;
-  uint32_t duration_ms;
-  void* on_destroy_ctx;
-  tk_destroy_t on_destroy;
-  timer_manager_t* timer_manager;
-  bool_t pending_destroy;
-  bool_t user_changed_time;
-  struct _timer_info_t* next;
-};
-
-timer_manager_t* timer_manager(void);
-ret_t timer_manager_set(timer_manager_t* timer_manager);
-
-timer_manager_t* timer_manager_create(timer_get_time_t get_time);
-timer_manager_t* timer_manager_init(timer_manager_t* timer_manager, timer_get_time_t get_time);
-ret_t timer_manager_deinit(timer_manager_t* timer_manager);
-ret_t timer_manager_destroy(timer_manager_t* timer_manager);
-
-uint32_t timer_manager_add(timer_manager_t* timer_manager, timer_func_t on_timer, void* ctx,
-                           uint32_t duration_ms);
-ret_t timer_manager_set_on_destroy(timer_manager_t* timer_manager, uint32_t timer_id,
-                                   tk_destroy_t on_destroy, void* on_destroy_ctx);
-ret_t timer_manager_remove(timer_manager_t* timer_manager, uint32_t timer_id);
-const timer_info_t* timer_manager_find(timer_manager_t* timer_manager, uint32_t timer_id);
-ret_t timer_manager_dispatch(timer_manager_t* timer_manager);
-uint32_t timer_manager_count(timer_manager_t* timer_manager);
-uint32_t timer_manager_next_time(timer_manager_t* timer_manager);
 
 /**
  * @class timer_t
  * @annotation ["scriptable", "fake"]
  * 定时器系统。
+ *
+ * > 本定时器精度较低，最高精度为1000/FPS，如果需要高精度的定时器，请用OS提供的定时器。
+ *
+ * 示例：
+ *
+ * ```c
+ * static ret_t my_on_timer(const timer_info_t* info) {
+ *  widget_t* widget = WIDGET(info->ctx);
+ *  ...
+ *  return RET_REPEAT;
+ * }
+ *
+ * ...
+ *
+ * timer_add(my_on_timer, widget, 1000);
+ * ```
+ * > 在非GUI线程请用timer\_queue。
+ *
  */
 
 /**
@@ -97,11 +66,11 @@ ret_t timer_init(timer_get_time_t get_time);
  * @annotation ["scriptable:custom", "static"]
  * @param {timer_func_t} on_timer timer回调函数。
  * @param {void*} ctx timer回调函数的上下文。
- * @param {uint32_t} duration_ms 时间。
+ * @param {uint32_t} duration 时间。
  *
  * @return {uint32_t} 返回timer的ID，TK_INVALID_ID表示失败。
  */
-uint32_t timer_add(timer_func_t on_timer, void* ctx, uint32_t duration_ms);
+uint32_t timer_add(timer_func_t on_timer, void* ctx, uint32_t duration);
 
 /**
  * @method timer_queue
@@ -110,11 +79,11 @@ uint32_t timer_add(timer_func_t on_timer, void* ctx, uint32_t duration_ms);
  * @param {timer_func_t} on_timer
  * timer回调函数，回调函数返回RET_REPEAT，则下次继续执行，否则自动移出。
  * @param {void*} ctx timer回调函数的上下文。
- * @param {uint32_t} duration_ms 时间。
+ * @param {uint32_t} duration 时间。
  *
  * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
  */
-ret_t timer_queue(timer_func_t on_timer, void* ctx, uint32_t duration_ms);
+ret_t timer_queue(timer_func_t on_timer, void* ctx, uint32_t duration);
 
 /**
  * @method timer_remove

@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  input method interface.
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -77,7 +77,7 @@ ret_t input_method_update_action_button_info(input_method_t* im, const char* tex
   e.e = event_init(EVT_IM_ACTION_INFO, im);
 
   im->action_button_enable = enable;
-  tk_strncpy(im->action_buton_text, text ? text : "", NAME_LEN);
+  tk_strncpy(im->action_buton_text, text ? text : "", TK_NAME_LEN);
 
   return input_method_dispatch(im, (event_t*)(&e));
 }

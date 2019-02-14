@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  tab_button
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -130,7 +130,7 @@ static ret_t tab_button_get_prop(widget_t* widget, const char* name, value_t* v)
     value_set_bool(v, tab_button->value);
     return RET_OK;
   } else if (tk_str_eq(name, WIDGET_PROP_STATE_FOR_STYLE)) {
-    value_set_int(v, widget_get_state_for_style(widget, tab_button->value));
+    value_set_str(v, widget_get_state_for_style(widget, tab_button->value, FALSE));
     return RET_OK;
   } else if (tk_str_eq(name, WIDGET_PROP_MIN_W)) {
     value_set_int(v, tab_button_get_min_w(widget));
@@ -160,7 +160,7 @@ static ret_t tab_button_set_prop(widget_t* widget, const char* name, const value
   return RET_NOT_FOUND;
 }
 
-static ret_t tab_button_destroy(widget_t* widget) {
+static ret_t tab_button_on_destroy(widget_t* widget) {
   tab_button_t* tab_button = TAB_BUTTON(widget);
 
   TKMEM_FREE(tab_button->icon);
@@ -179,7 +179,7 @@ static const widget_vtable_t s_tab_button_vtable = {
     .on_paint_self = tab_button_on_paint_self,
     .get_prop = tab_button_get_prop,
     .set_prop = tab_button_set_prop,
-    .destroy = tab_button_destroy};
+    .on_destroy = tab_button_on_destroy};
 
 ret_t tab_button_set_icon(widget_t* widget, const char* name) {
   tab_button_t* tab_button = TAB_BUTTON(widget);
@@ -202,11 +202,10 @@ ret_t tab_button_set_active_icon(widget_t* widget, const char* name) {
 }
 
 widget_t* tab_button_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  tab_button_t* tab_button = TKMEM_ZALLOC(tab_button_t);
-  widget_t* widget = WIDGET(tab_button);
+  widget_t* widget = widget_create(parent, &s_tab_button_vtable, x, y, w, h);
+  tab_button_t* tab_button = TAB_BUTTON(widget);
   return_value_if_fail(tab_button != NULL, NULL);
 
-  widget_init(widget, parent, &s_tab_button_vtable, x, y, w, h);
   tab_button_set_value_only(widget, FALSE);
 
   return widget;

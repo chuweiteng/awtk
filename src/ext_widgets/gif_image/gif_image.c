@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  gif_image
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -37,7 +37,7 @@ static ret_t gif_image_on_timer(const timer_info_t* info) {
   if (image->delays != NULL && image->frames_nr > 1) {
     uint32_t delay = image->delays[image->index];
 
-    if (delay == info->duration_ms) {
+    if (delay == info->duration) {
       return RET_REPEAT;
     } else {
       image->timer_id = timer_add(gif_image_on_timer, image, delay);
@@ -105,7 +105,7 @@ static const char* s_gif_image_clone_properties[] = {
     WIDGET_PROP_ANCHOR_X,  WIDGET_PROP_ANCHOR_Y,   WIDGET_PROP_ROTATION,
     WIDGET_PROP_CLICKABLE, WIDGET_PROP_SELECTABLE, NULL};
 
-static ret_t gif_image_destroy(widget_t* widget) {
+static ret_t gif_image_on_destroy(widget_t* widget) {
   gif_image_t* image = GIF_IMAGE(widget);
   return_value_if_fail(image != NULL, RET_BAD_PARAMS);
 
@@ -114,14 +114,14 @@ static ret_t gif_image_destroy(widget_t* widget) {
     image->timer_id = TK_INVALID_ID;
   }
 
-  return image_base_destroy(widget);
+  return image_base_on_destroy(widget);
 }
 
 static const widget_vtable_t s_gif_image_vtable = {.size = sizeof(gif_image_t),
                                                    .type = WIDGET_TYPE_GIF_IMAGE,
                                                    .clone_properties = s_gif_image_clone_properties,
                                                    .create = gif_image_create,
-                                                   .destroy = gif_image_destroy,
+                                                   .on_destroy = gif_image_on_destroy,
                                                    .on_event = image_base_on_event,
                                                    .on_paint_self = gif_image_on_paint_self,
                                                    .on_paint_background = widget_on_paint_null,
@@ -129,11 +129,10 @@ static const widget_vtable_t s_gif_image_vtable = {.size = sizeof(gif_image_t),
                                                    .get_prop = image_base_get_prop};
 
 widget_t* gif_image_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  gif_image_t* gif_image = TKMEM_ZALLOC(gif_image_t);
-  widget_t* widget = WIDGET(gif_image);
+  widget_t* widget = widget_create(parent, &s_gif_image_vtable, x, y, w, h);
+  gif_image_t* gif_image = GIF_IMAGE(widget);
   return_value_if_fail(gif_image != NULL, NULL);
 
-  widget_init(widget, parent, &s_gif_image_vtable, x, y, w, h);
   image_base_init(widget);
 
   return widget;

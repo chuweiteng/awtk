@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  utils struct and utils functions.
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,6 +21,7 @@
 
 #include "tkc/fs.h"
 #include "tkc/mem.h"
+#include "tkc/utf8.h"
 #include "tkc/path.h"
 #include "tkc/utils.h"
 
@@ -247,6 +248,19 @@ char* tk_strdup(const char* str) {
   return_value_if_fail(str != NULL, NULL);
 
   return tk_strndup(str, strlen(str));
+}
+
+wchar_t* tk_wstrdup(const wchar_t* str) {
+  uint32_t size = 0;
+  wchar_t* new_str = NULL;
+  return_value_if_fail(str != NULL, NULL);
+  size = wcslen(str) + 1;
+
+  new_str = TKMEM_ALLOC(size * sizeof(wchar_t));
+  return_value_if_fail(new_str != NULL, NULL);
+  memcpy(new_str, str, size * sizeof(wchar_t));
+
+  return new_str;
 }
 
 uint16_t* tk_memset16(uint16_t* buff, uint16_t val, uint32_t size) {
@@ -525,11 +539,27 @@ ret_t tk_str_append(char* str, uint32_t max_len, const char* s) {
   return RET_OK;
 }
 
+int32_t tk_str_cmp(const char* a, const char* b) {
+  if (a == b) {
+    return 0;
+  }
+
+  if (a == NULL) {
+    return -1;
+  }
+
+  if (b == NULL) {
+    return 1;
+  }
+
+  return strcmp(a, b);
+}
+
 char* tk_str_copy(char* dst, const char* src) {
   if (src != NULL) {
     uint32_t size = strlen(src) + 1;
     if (dst != NULL) {
-      char* str = TKMEM_REALLOC(char, dst, size);
+      char* str = TKMEM_REALLOCT(char, dst, size);
       return_value_if_fail(str != NULL, dst);
       memcpy(str, src, size);
       dst = str;
@@ -547,3 +577,114 @@ char* tk_str_copy(char* dst, const char* src) {
 
   return dst;
 }
+
+int tk_watoi(const wchar_t* str) {
+  char num[TK_NUM_MAX_LEN + 1] = {0};
+  return_value_if_fail(str != NULL, 0);
+
+  utf8_from_utf16(str, num, TK_NUM_MAX_LEN);
+
+  return tk_atoi(num);
+}
+
+bool_t tk_watob(const wchar_t* str) {
+  if (str == NULL || *str == 'f' || *str == 'F') {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+double tk_watof(const wchar_t* str) {
+  char num[TK_NUM_MAX_LEN + 1] = {0};
+  return_value_if_fail(str != NULL, 0);
+
+  utf8_from_utf16(str, num, TK_NUM_MAX_LEN);
+
+  return tk_atof(num);
+}
+
+ret_t default_destroy(void* data) {
+  TKMEM_FREE(data);
+
+  return RET_OK;
+}
+
+ret_t dummy_destroy(void* data) {
+  return RET_OK;
+}
+
+int pointer_compare(const void* a, const void* b) {
+  return ((const char*)a - (const char*)b);
+}
+
+ret_t tk_replace_locale(const char* name, char out[TK_NAME_LEN + 1], const char* locale) {
+  char* d = NULL;
+  char* p = NULL;
+  int32_t len = 0;
+  const char* s = NULL;
+  return_value_if_fail(strlen(name) < TK_NAME_LEN, RET_BAD_PARAMS);
+  return_value_if_fail(strlen(locale) <= strlen(TK_LOCALE_MAGIC), RET_BAD_PARAMS);
+  return_value_if_fail(name != NULL && out != NULL && locale != NULL, RET_BAD_PARAMS);
+
+  d = out;
+  s = name;
+  p = strstr(name, TK_LOCALE_MAGIC);
+  return_value_if_fail(p != NULL, RET_BAD_PARAMS);
+
+  len = p - s;
+  memcpy(d, s, len);
+  d += len;
+
+  len = strlen(locale);
+  memcpy(d, locale, len);
+
+  d += len;
+  strcpy(d, p + strlen(TK_LOCALE_MAGIC));
+
+  return RET_OK;
+}
+
+bool_t tk_is_valid_name(const char* name) {
+  const char* p = name;
+  while (*p) {
+    if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || (*p >= '0' && *p <= '9') ||
+        *p == '_') {
+      p++;
+    } else {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+bool_t tk_str_start_with(const char* str, const char* prefix) {
+  return_value_if_fail(str != NULL && prefix != NULL, FALSE);
+
+  return memcmp(str, prefix, strlen(prefix)) == 0;
+}
+
+const char* tk_under_score_to_camel(const char* name, char* out, uint32_t max_out_size) {
+  uint32_t i = 0;
+  const char* s = name;
+  return_value_if_fail(name != NULL && out != NULL && max_out_size > 0, NULL);
+
+  while(*s && i < max_out_size) {
+    if(*s == '_') {
+      s++;
+      if(*s != '\0') {
+        out[i++] = toupper(*s);
+      } else {
+        break;
+      }
+    } else {
+      out[i++] = *s;
+    }
+    s++;
+  }
+  out[i] = '\0';
+
+  return out;
+}
+

@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  bitmap font generator
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -40,7 +40,7 @@ static int char_cmp(const void* a, const void* b) {
 }
 
 ret_t font_gen(font_t* font, uint16_t font_size, const char* str, const char* output_filename) {
-  char name[NAME_LEN + 1];
+  char name[TK_NAME_LEN + 1];
   uint8_t* buff = (uint8_t*)TKMEM_ALLOC(MAX_BUFF_SIZE);
   uint32_t size = font_gen_buff(font, font_size, str, buff, MAX_BUFF_SIZE);
 
@@ -86,7 +86,7 @@ uint32_t font_gen_buff(font_t* font, uint16_t font_size, const char* str, uint8_
       continue;
     }
     printf("%d/%d: 0x%04x\n", i, size, c);
-    if (font_find_glyph(font, c, &g, font_size) == RET_OK) {
+    if (font_get_glyph(font, c, font_size, &g) == RET_OK) {
       uint32_t data_size = g.w * g.h;
       return_value_if_fail(buff_size > (iter->offset + data_size + 4), 0);
 
@@ -94,6 +94,8 @@ uint32_t font_gen_buff(font_t* font, uint16_t font_size, const char* str, uint8_
       save_uint8(p, g.y);
       save_uint8(p, g.w);
       save_uint8(p, g.h);
+      save_uint32(p, g.advance);
+
       memcpy(p, g.data, data_size);
       p += data_size;
     } else if (c > 32) {

@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  guage
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -61,7 +61,7 @@ static ret_t guage_set_prop(widget_t* widget, const char* name, const value_t* v
   return RET_NOT_FOUND;
 }
 
-static ret_t guage_destroy(widget_t* widget) {
+static ret_t guage_on_destroy(widget_t* widget) {
   guage_t* guage = GUAGE(widget);
 
   TKMEM_FREE(guage->image);
@@ -110,14 +110,14 @@ static const widget_vtable_t s_guage_vtable = {.size = sizeof(guage_t),
                                                .on_paint_self = guage_on_paint_self,
                                                .set_prop = guage_set_prop,
                                                .get_prop = guage_get_prop,
-                                               .destroy = guage_destroy};
+                                               .on_destroy = guage_on_destroy};
 
 widget_t* guage_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  guage_t* guage = TKMEM_ZALLOC(guage_t);
-  widget_t* widget = WIDGET(guage);
+  widget_t* widget = widget_create(parent, &s_guage_vtable, x, y, w, h);
+  guage_t* guage = GUAGE(widget);
+
   return_value_if_fail(guage != NULL, NULL);
 
-  widget_init(widget, parent, &s_guage_vtable, x, y, w, h);
   guage->draw_type = IMAGE_DRAW_CENTER;
 
   return widget;

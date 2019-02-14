@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  stb truetype font loader
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,6 +18,10 @@
  * 2018-01-21 Li XianJing <xianjimli@hotmail.com> created
  *
  */
+
+#include "base/types_def.h"
+
+#ifdef WITH_STB_FONT
 
 #define STB_TRUETYPE_IMPLEMENTATION
 
@@ -40,12 +44,12 @@ typedef struct _font_stb_t {
 
 } font_stb_t;
 
-static bool_t font_stb_match(font_t* f, const char* name, uint16_t font_size) {
+static bool_t font_stb_match(font_t* f, const char* name, font_size_t font_size) {
   (void)font_size;
   return (name == NULL || strcmp(name, f->name) == 0);
 }
 
-static int32_t font_stb_get_baseline(font_t* f, uint16_t font_size) {
+static int32_t font_stb_get_baseline(font_t* f, font_size_t font_size) {
   font_stb_t* font = (font_stb_t*)f;
   stbtt_fontinfo* sf = &(font->stb_font);
   float scale = stbtt_ScaleForPixelHeight(sf, font_size);
@@ -53,15 +57,13 @@ static int32_t font_stb_get_baseline(font_t* f, uint16_t font_size) {
   return scale * font->ascent;
 }
 
-static ret_t font_stb_find_glyph(font_t* f, wchar_t c, glyph_t* g, uint16_t font_size) {
+static ret_t font_stb_get_glyph(font_t* f, wchar_t c, font_size_t font_size, glyph_t* g) {
   int x = 0;
   int y = 0;
   int w = 0;
   int h = 0;
-  int x1 = 0;
-  int y1 = 0;
-  int x2 = 0;
-  int y2 = 0;
+  int lsb = 0;
+  int advance = 0;
   font_stb_t* font = (font_stb_t*)f;
   stbtt_fontinfo* sf = &(font->stb_font);
   float scale = stbtt_ScaleForPixelHeight(sf, font_size);
@@ -71,13 +73,24 @@ static ret_t font_stb_find_glyph(font_t* f, wchar_t c, glyph_t* g, uint16_t font
   }
 
   g->data = stbtt_GetCodepointBitmap(sf, 0, scale, c, &w, &h, &x, &y);
+  stbtt_GetCodepointHMetrics(sf, c, &advance, &lsb);
+
   g->x = x;
   g->y = y;
   g->w = w;
   g->h = h;
+  g->advance = advance * scale;
 
-  glyph_cache_add(&(font->cache), c, font_size, g);
-  stbtt_GetGlyphBitmapBox(sf, c, 0, scale, &x1, &y1, &x2, &y2);
+  if (g->data != NULL) {
+    glyph_t* gg = glyph_clone(g);
+    if (gg != NULL) {
+      glyph_cache_add(&(font->cache), c, font_size, gg);
+    } else {
+      STBTT_free(g->data, NULL);
+      log_warn("out of memory\n");
+      g->data = NULL;
+    }
+  }
 
   return g->data != NULL ? RET_OK : RET_NOT_FOUND;
 }
@@ -93,9 +106,10 @@ static ret_t font_stb_destroy(font_t* f) {
 
 static ret_t destroy_glyph(void* data) {
   glyph_t* g = (glyph_t*)data;
-  if (g->data) {
+  if (g->data != NULL) {
     STBTT_free(g->data, NULL);
   }
+  glyph_destroy(g);
 
   return RET_OK;
 }
@@ -109,7 +123,7 @@ font_t* font_stb_create(const char* name, const uint8_t* buff, uint32_t buff_siz
 
   f->base.name = name;
   f->base.match = font_stb_match;
-  f->base.find_glyph = font_stb_find_glyph;
+  f->base.get_glyph = font_stb_get_glyph;
   f->base.get_baseline = font_stb_get_baseline;
   f->base.destroy = font_stb_destroy;
 
@@ -134,3 +148,5 @@ font_loader_t* font_loader_stb(void) {
 
   return &loader;
 }
+
+#endif /*WITH_STB_FONT*/

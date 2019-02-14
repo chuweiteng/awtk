@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  events structs
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,6 +22,7 @@
 #ifndef TK_EVENTS_H
 #define TK_EVENTS_H
 
+#include "tkc/event.h"
 #include "tkc/value.h"
 #include "base/canvas.h"
 #include "base/system_info.h"
@@ -44,7 +45,7 @@ typedef enum _event_type_t {
    * @const EVT_POINTER_DOWN
    * 指针按下事件名(pointer_event_t)。
    */
-  EVT_POINTER_DOWN,
+  EVT_POINTER_DOWN = 0xff,
   /**
    * @const EVT_POINTER_DOWN_ABORT
    * 取消前一个指针按下事件名(pointer_event_t)。
@@ -116,11 +117,6 @@ typedef enum _event_type_t {
    */
   EVT_KEY_UP,
   /**
-   * @const EVT_DESTROY
-   * 对象销毁事件名(event_t)。
-   */
-  EVT_DESTROY,
-  /**
    * @const EVT_WILL_MOVE
    * 即将移动Widget的事件名(event_t)。
    */
@@ -150,16 +146,6 @@ typedef enum _event_type_t {
    * 调整Widget大小/位置的事件名(event_t)。
    */
   EVT_MOVE_RESIZE,
-  /**
-   * @const EVT_PROP_WILL_CHANGE
-   * 对象的属性即将改变的事件名(prop_change_event_t)。
-   */
-  EVT_PROP_WILL_CHANGE,
-  /**
-   * @const EVT_PROP_CHANGED
-   * 对象的属性改变的事件名(prop_change_event_t)。
-   */
-  EVT_PROP_CHANGED,
   /**
    * @const EVT_VALUE_WILL_CHANGE
    * 控件的值即将改变的事件名(event_t)。
@@ -300,42 +286,6 @@ typedef enum _event_type_t {
 } event_type_t;
 
 /**
- * @class event_t
- * @annotation ["scriptable"]
- * 事件基类。
- */
-typedef struct _event_t {
-  /**
-   * @property {int32_t} type
-   * @annotation ["readable", "scriptable"]
-   * 类型。
-   */
-  uint32_t type;
-  /**
-   * @property {int32_t} time
-   * @annotation ["readable", "scriptable"]
-   * 事件发生的时间。
-   */
-  uint32_t time;
-  /**
-   * @property {void*} target
-   * @annotation ["readable", "scriptable"]
-   * 事件发生的目标对象。
-   */
-  void* target;
-} event_t;
-
-/**
- * @method event_cast
- * @annotation ["cast", "scriptable"]
- * 把event对象转wheel_event_t对象，主要给脚本语言使用。
- * @param {event_t*} event event对象。
- *
- * @return {event_t*} 对象。
- */
-event_t* event_cast(event_t* event);
-
-/**
  * @class wheel_event_t
  * @annotation ["scriptable"]
  * @parent event_t
@@ -384,38 +334,6 @@ typedef struct _wheel_event_t {
  * @return {wheel_event_t*} 对象。
  */
 wheel_event_t* wheel_event_cast(event_t* event);
-
-/**
- * @class prop_change_event_t
- * @annotation ["scriptable"]
- * @parent event_t
- * 对象属性变化事件。
- */
-typedef struct _prop_change_event_t {
-  event_t e;
-  /**
-   * @property {char*} name
-   * @annotation ["readable", "scriptable"]
-   * 属性的名称。
-   */
-  const char* name;
-  /**
-   * @property {value_t*} value
-   * @annotation ["readable", "scriptable"]
-   * 属性的值。
-   */
-  const value_t* value;
-} prop_change_event_t;
-
-/**
- * @method prop_change_event_cast
- * @annotation ["cast", "scriptable"]
- * 把event对象转prop_change_event_t对象，主要给脚本语言使用。
- * @param {event_t*} event event对象。
- *
- * @return {prop_change_event_t*} 对象。
- */
-prop_change_event_t* prop_change_event_cast(event_t* event);
 
 /**
  * @class pointer_event_t
@@ -583,16 +501,6 @@ typedef struct _window_event_t {
 window_event_t* window_event_cast(event_t* event);
 
 /**
- * @method event_init
- * 初始化事件。
- * @param {uint32_t} type 事件类型。
- * @param {void*} target 目标对象。
- *
- * @return {event_t} 事件对象。
- */
-event_t event_init(uint32_t type, void* target);
-
-/**
  * @method pointer_event_rotate
  * 根据屏幕旋转方向修正pointer_event中的坐标。
  * @param {pointer_event_t*} evt 指针事件对象。
@@ -601,9 +509,6 @@ event_t event_init(uint32_t type, void* target);
  * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
  */
 ret_t pointer_event_rotate(pointer_event_t* evt, system_info_t* info);
-
-/*事件处理函数原型*/
-typedef ret_t (*event_func_t)(void* ctx, event_t* e);
 
 END_C_DECLS
 

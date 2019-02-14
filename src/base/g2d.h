@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  hardware 2d
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * this program is distributed in the hope that it will be useful,
  * but without any warranty; without even the implied warranty of
@@ -27,6 +27,12 @@
 
 BEGIN_C_DECLS
 
+/**
+ * @class g2d_t
+ *
+ * 2D加速接口。
+ *
+ */
 /**
  * @method g2d_fill_rect
  * 用颜色填充指定的区域。

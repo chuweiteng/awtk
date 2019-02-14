@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  dialog
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -44,9 +44,8 @@ static ret_t dialog_on_add_child(widget_t* widget, widget_t* child) {
   return RET_CONTINUE;
 }
 
-static const char* s_dialog_properties[] = {WIDGET_PROP_ANIM_HINT,       WIDGET_PROP_OPEN_ANIM_HINT,
-                                            WIDGET_PROP_CLOSE_ANIM_HINT, WIDGET_PROP_THEME,
-                                            WIDGET_PROP_SCRIPT,          NULL};
+static const char* s_dialog_properties[] = {WIDGET_PROP_ANIM_HINT, WIDGET_PROP_OPEN_ANIM_HINT,
+                                            WIDGET_PROP_CLOSE_ANIM_HINT, WIDGET_PROP_THEME, NULL};
 static const widget_vtable_t s_dialog_vtable = {.size = sizeof(dialog_t),
                                                 .type = WIDGET_TYPE_DIALOG,
                                                 .is_window = TRUE,
@@ -60,13 +59,10 @@ static const widget_vtable_t s_dialog_vtable = {.size = sizeof(dialog_t),
                                                 .on_paint_end = window_base_on_paint_end,
                                                 .set_prop = window_base_set_prop,
                                                 .get_prop = window_base_get_prop,
-                                                .destroy = window_base_destroy};
+                                                .on_destroy = window_base_on_destroy};
 
 widget_t* dialog_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  dialog_t* dialog = TKMEM_ZALLOC(dialog_t);
-  widget_t* widget = WIDGET(dialog);
-
-  return window_base_init(widget, parent, &s_dialog_vtable, x, y, w, h);
+  return window_base_create(parent, &s_dialog_vtable, x, y, w, h);
 }
 
 widget_t* dialog_create_simple(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {

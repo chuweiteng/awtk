@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  progress_circle
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -155,6 +155,14 @@ ret_t progress_circle_set_counter_clock_wise(widget_t* widget, bool_t counter_cl
   return widget_invalidate(widget, NULL);
 }
 
+static ret_t progress_circle_on_destroy(widget_t* widget) {
+  progress_circle_t* progress_circle = PROGRESS_CIRCLE(widget);
+
+  TKMEM_FREE(progress_circle->unit);
+
+  return RET_OK;
+}
+
 static ret_t progress_circle_get_prop(widget_t* widget, const char* name, value_t* v) {
   progress_circle_t* progress_circle = PROGRESS_CIRCLE(widget);
   return_value_if_fail(widget != NULL && name != NULL && v != NULL, RET_BAD_PARAMS);
@@ -221,15 +229,14 @@ static const widget_vtable_t s_progress_circle_vtable = {
     .clone_properties = s_progress_circle_clone_properties,
     .create = progress_circle_create,
     .on_paint_self = progress_circle_on_paint_self,
+    .on_destroy = progress_circle_on_destroy,
     .get_prop = progress_circle_get_prop,
     .set_prop = progress_circle_set_prop};
 
 widget_t* progress_circle_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  progress_circle_t* progress_circle = TKMEM_ZALLOC(progress_circle_t);
-  widget_t* widget = WIDGET(progress_circle);
+  widget_t* widget = widget_create(parent, &s_progress_circle_vtable, x, y, w, h);
+  progress_circle_t* progress_circle = PROGRESS_CIRCLE(widget);
   return_value_if_fail(progress_circle != NULL, NULL);
-
-  widget_init(widget, parent, &s_progress_circle_vtable, x, y, w, h);
 
   progress_circle->max = 100;
   progress_circle->line_width = 8;

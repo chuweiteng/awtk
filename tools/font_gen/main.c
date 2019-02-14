@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  bitmap font generator
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,7 +23,7 @@
 #include "common/utils.h"
 #include "font_gen.h"
 #include "font_loader/font_loader_bitmap.h"
-#include "font_loader/font_loader_stb.h"
+#include "font_loader/font_loader_truetype.h"
 
 int main(int argc, char** argv) {
   uint32_t size = 0;
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
   ttf_buff = (uint8_t*)read_file(ttf_filename, &size);
   return_value_if_fail(ttf_buff != NULL, 0);
 
-  font = font_stb_create("default", ttf_buff, size);
+  font = font_truetype_create("default", ttf_buff, size);
 
   str_buff = read_file(str_filename, &size);
   return_value_if_fail(str_buff != NULL, 0);

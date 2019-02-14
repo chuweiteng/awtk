@@ -1,4 +1,231 @@
 # 最新动态
+* 2019/02/14
+  * 增加 tk\_under\_score\_to\_camel
+  * 增加 widget\_set\_prop\_pointer/widget\_get\_prop\_pointer
+
+* 2019/02/13
+  * 窗口去掉script属性。
+
+* 2019/02/07
+  * 资源支持脚本。
+  * 修改object\_has\_prop的BUG。
+
+* 2019/02/05
+  * 公开函数str\_extend
+
+* 2019/02/04
+  * 增加测试程序。
+  * 更新资源。
+  * edit处理属性value。
+  * 完善str/tokenizer/combobox/checkbutton
+
+* 2019/02/03
+  * 增加object\_notify\_changed。
+
+* 2019/02/02
+  * 增加tk\_str\_ieq
+
+* 2019/02/01
+  * 增加测试。
+  * 合并mvvm分支。
+  * 将mvvm代码移动到独立的项目：awtk-mvvm
+
+* 2019/01/31
+  * 增加binding context awtk
+
+* 2019/01/30
+  * 增加binding context
+  
+* 2019/01/29
+  * 增加navigator
+
+* 2019/01/28
+  * 增加navigator\_request
+  * 增加navigator\_handler
+
+* 2019/01/27
+  * 增加view\_model
+
+* 2019/01/26
+  * 修改字符串翻译的问题。issue 83/86
+  * 增加value converter factory
+  * 增加value validator factory
+  * add expr eval
+
+* 2019/01/25
+  * 增加model\_delegate。
+
+* 2019/01/24
+  * 增加value\_validator/value\_validator\_delegate
+
+* 2019/01/23
+  * 增加value\_converter/value\_converter\_delegate
+
+* 2019/01/22
+  * 增加binding rule parse
+
+* 2019/01/21
+  * 增加data\_binding/command\_binding.
+  * 增加测试程序。
+
+* 2019/01/20
+  * 完善object，增加一些包装函数。
+  * 增加binding\_rule/binding\_rule\_data
+
+* 2019/01/19
+  * 修改valgrind发些的问题，并增加一些脚本。
+  * 增加MVVM分支。 
+
+* 2019/01/18
+  * 增加文档。
+
+* 2019/01/17
+  * 整理API文档：list\_view/list\_view\_h/list\_view\_item/scroll\_view/scroll\_bar
+  * 整理API文档：self\_layouter/self\_layouter\_default/children\_layouter/children\_layouter\_default
+  * 去掉array类，使用darray类代替。
+  * 修改valgrind发现的泄露内存问题。
+
+* 2019/01/16
+  * 增加darray类，逐步替换以前的array类。
+  * 增加widget pool用于控件的缓存和重复利用，可以通过WITH\_WIDGET\_POOL启用。
+  * 增加widget\_create函数，简化子类控件的创建函数，同时让通用控件本身的由widget pool集中管理。
+  * 使用array的地方替换为darray。
+  * 更新stm32相关工程。
+
+* 2019/01/15
+  * 整理API文档：progress\_circle/rich\_text/slide\_menu/slide\_view/svg\_image/switch
+  * 整理API文档：text\_selector/time\_clock/digit\_clock
+  * 增加progress\_circle c语言demo。
+  * 增加slide\_menu c语言demo。
+  * 增加slide\_view c语言demo。
+  * 增加svg\_image c语言demo。
+  * 增加switch c语言demo。
+  * 增加text\_selector c语言demo。
+  * 增加time\_clock c语言demo。
+  * 增加digit\_clock c语言demo。
+  * 增加INPUT\_CUSTOM用于关闭系统缺省软键盘。
+
+* 2019/01/14
+  * 完善脚本绑定(增加函数和注释)。
+  * 整理API文档：color\_picker/gif\_image/guage/guage\_pointer/image\_animation/image\_value/keyboard。
+
+* 2019/01/13
+  * 完善脚本绑定(增加函数和注释)。
+  * 更新awtk-js。
+  * 更新awtk-lua。
+
+* 2019/01/12
+  * 重新实现timer，解决timer中打开模态窗口的问题。 
+  * 重新实现idle，解决idle中打开模态窗口的问题。 
+  * 完善object，在修改属性和销毁时触发事件。
+
+* 2019/01/11
+  * 增加slist\_t。
+
+* 2019/01/10
+  * 增加object\_t/object\_default\_t/named\_value\_t等几个类。
+  * value\_t支持object。
+
+* 2019/01/09
+  * 完善slide menu，增加mask color，实现两边的按钮淡出的效果。
+  * 增加canavs widget的demo
+  * 整理API文档：canvas\_widget
+
+* 2019/01/08
+  * 完善text\_selector，增加mask color，实现伪3D效果。
+  * 修改font size的类型为font\_size\_t。
+  * 修改agge scan line为负的BUG(感谢陈谭提供补丁)。
+  * 按钮支持长按事件。
+
+* 2019/01/07
+  * 修改"Copyright (c) 2018 - 2018"为"Copyright (c) 2018 - 2019"
+  * 整理API文档：tab\_control/tab\_button/tab\_button\_group。
+
+* 2019/01/04
+  * slide\_menu动态决定可见子控件的个数(由长度与宽度比例和子控件个数决定)。
+  * 修改combobox的BUG。
+
+* 2019/01/03
+  * 同步SDL代码。
+  * 整理API文档：timer/idle
+  * 用valgrind测试内存问题，并修改progress\_circle中的内存泄露问题。
+  * 修改桌面版本窗口resize的问题。
+  * 密码编辑器增加显示/不显示明文的开关。
+  * 键盘增加关闭按钮。
+  * 修改把控件状态改成字符串导致的BUG。
+  * 修改处理capslock的BUG。
+
+* 2019/01/02
+  * 整理API文档：input\_method/input\_method\_default/input\_method\_sdl/input\_method\_null
+  * 整理API文档：input\_engine/input\_engine\_pinyin/input\_engine\_null
+  * 更新stm32相关工程。
+
+* 2018/12/31
+  * 整理API文档：ui\_loader/ui\_builder/ui\_xml\_writer/ui\_binary\_writer/ui\_builder\_default
+
+* 2018/12/30
+  * 整理API文档：style/style\_const/style\_mutable/theme/style\_factory
+  * move ui\_loader.c/.h to base目录。
+
+* 2018/12/29
+  * 整理API文档：bitmap/image\_loader/image\_manager/image\_loader\_stb
+  * 整理API文档：asset\_info/assets\_manager/locale\_info
+  * 重构image相关的代码  
+
+* 2018/12/28
+  * 整理API文档：glyph/font/font\_loader/font\_manager/font\_loader\_ft/font\_loader\_stb/font\_loader\_bitmap
+  * 重构font相关的代码  
+
+* 2018/12/27
+  * 整理控件API文档：value/mem/str/wstr/array/wbuffer/rbuffer/rgba/color/color\_parser。
+  * 修改SDL输入法的问题(感谢大恒提供补丁)。
+  * 完善freetype字体渲染(感谢zjm09提供补丁)。
+  * 完善glyph\_cache，允许glyph有不同的实现。 
+  * 重构color\_parser并增加单元测试。
+  * 把events拆成两部分，基础部分移到tkc中。
+
+* 2018/12/26
+  * 为了语义的一致性，把widget的虚函数destroy改名为on\_destroy。on\_destroy只是通知子类控件即将销毁。
+  * 重命名NAME\_LEN为TK\_NAME\_LEN。
+  * 增加函数：widget\_animate\_value\_to
+  * 修改widget\_animator\_time\_elapse计算次数的BUG。
+  * 整理控件API文档：color\_tile/calibration\_win/combo\_box\_item/button\_group
+  * 整理控件API文档：dialog\_title/dialog\_client/progress\_bar/slider/vgcanvas
+  * 支持freetype字体渲染(感谢zjm09提供补丁)。
+  * 完善value\_t。
+
+* 2018/12/25
+  * 整理控件API文档：row/column/grid/grid\_item/view/group\_box/app\_bar/system\_bar
+  * 修改idle\_info\_destroy的BUG(感谢尧燊提供补丁)。
+  * 修改timer\_info\_destroy的BUG(感谢尧燊提供补丁)。
+  * widget状态由枚举格式改为字符串格式，这样方便第三方控件定义私有的状态。
+  * style\_id由枚举格式改为字符串格式，这样方便第三方控件定义私有的style\_id。
+
+* 2018/12/24
+  * 整理控件API文档：dialog/popup/window/window\_base
+
+* 2018/12/23
+  * 优化。
+  * 整理控件API文档：spin\_box/combo\_box
+  * 增加combo\_box的C示例代码。
+
+* 2018/12/22
+  * 修改combobox事件的BUG(issue #62)。
+  * 增加函数widgeti\_get\_prop\_default\_value。
+  * 增加widget\_recycle函数，支持控件回收，提高运行速度，减少内存碎片。
+
+* 2018/12/21
+  * 整理控件API文档：button/label/image/edit
+
+* 2018/12/20
+  * 重新设计layouter的架构，把layouter分成self\_layouter和children\_layouter两个接口，方便扩展支持不同的布局方式(如css flex)。
+  * 更新layout的文档，为了保持兼容，旧的layout属性仍然支持，新的代码请参考新的文档[layout](https://github.com/zlgopen/awtk/blob/master/docs/layout.md)。
+  * 子控件支持浮动布局，不受父控件的children\_layouter的限制。
+  * 支持等宽字体的问题(感谢[zjm1060](https://github.com/zjm1060)提供补丁)。 
+  * 修改vgcanvas中w/h为负数时的BUG(感谢朝泽提供补丁)。
+  * 完善widget\_clone/widget\_equal/widget\_to\_xml。
+  * widget增加sensitive属性。
+  * 完善main\_loop\_dispatch\_events，支持按键事件(感谢[zjm1060](https://github.com/zjm1060)提供补丁)。 
 
 * 2018/12/19
   * 修改combobox弹出窗口位置的BUG。

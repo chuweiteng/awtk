@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  basic types definitions.
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,10 +23,6 @@
 #define TK_TYPES_DEF_H
 
 #include "tkc/types_def.h"
-
-#if defined(HAS_AWTK_CONFIG)
-#include "awtk_config.h"
-#endif /*HAS_AWTK_CONFIG*/
 
 /**
  * @enum lcd_orientation_t
@@ -230,5 +226,20 @@ typedef enum _app_type_t {
 
 struct _widget_t;
 typedef struct _widget_t widget_t;
+
+struct _widget_vtable_t;
+typedef struct _widget_vtable_t widget_vtable_t;
+
+#define fix_xywh(x, y, w, h) \
+  if (w < 0) {               \
+    w = -w;                  \
+    x = x - w + 1;           \
+  }                          \
+  if (h < 0) {               \
+    h = -h;                  \
+    y = y - h + 1;           \
+  }
+
+#define TK_LONG_PRESS_TIME 1000
 
 #endif /*TK_TYPES_DEF_H*/

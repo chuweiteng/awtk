@@ -378,7 +378,7 @@ static ret_t dummy_on_timer(const timer_info_t* info) {
 }
 
 TEST(Widget, timer) {
-  widget_t* w = window_create(NULL, 0, 0, 400, 300);
+  widget_t* w = button_create(NULL, 0, 0, 400, 300);
   uint32_t id = widget_add_timer(w, dummy_on_timer, 100);
   ASSERT_EQ(timer_find(id)->id, id);
 
@@ -481,6 +481,34 @@ TEST(Widget, insert) {
   ASSERT_EQ(widget_index_of(b5), 2);
 
   ASSERT_EQ(widget_insert_child(w, 1, b5), RET_FAIL);
+
+  widget_destroy(w);
+}
+
+TEST(Widget, widget_get_state_for_style) {
+  widget_t* w = window_create(NULL, 0, 0, 400, 300);
+  widget_t* b = button_create(w, 1, 0, 10, 20);
+
+  widget_set_state(b, WIDGET_STATE_NORMAL);
+  ASSERT_EQ(string(WIDGET_STATE_NORMAL), widget_get_state_for_style(b, FALSE, FALSE));
+  widget_set_state(b, WIDGET_STATE_PRESSED);
+  ASSERT_EQ(string(WIDGET_STATE_PRESSED), widget_get_state_for_style(b, FALSE, FALSE));
+  widget_set_state(b, WIDGET_STATE_OVER);
+  ASSERT_EQ(string(WIDGET_STATE_OVER), widget_get_state_for_style(b, FALSE, FALSE));
+
+  widget_set_state(b, WIDGET_STATE_NORMAL);
+  ASSERT_EQ(string(WIDGET_STATE_NORMAL_OF_CHECKED), widget_get_state_for_style(b, FALSE, TRUE));
+  widget_set_state(b, WIDGET_STATE_PRESSED);
+  ASSERT_EQ(string(WIDGET_STATE_PRESSED_OF_CHECKED), widget_get_state_for_style(b, FALSE, TRUE));
+  widget_set_state(b, WIDGET_STATE_OVER);
+  ASSERT_EQ(string(WIDGET_STATE_OVER_OF_CHECKED), widget_get_state_for_style(b, FALSE, TRUE));
+
+  widget_set_state(b, WIDGET_STATE_NORMAL);
+  ASSERT_EQ(string(WIDGET_STATE_NORMAL_OF_ACTIVE), widget_get_state_for_style(b, TRUE, FALSE));
+  widget_set_state(b, WIDGET_STATE_PRESSED);
+  ASSERT_EQ(string(WIDGET_STATE_PRESSED_OF_ACTIVE), widget_get_state_for_style(b, TRUE, FALSE));
+  widget_set_state(b, WIDGET_STATE_OVER);
+  ASSERT_EQ(string(WIDGET_STATE_OVER_OF_ACTIVE), widget_get_state_for_style(b, TRUE, FALSE));
 
   widget_destroy(w);
 }

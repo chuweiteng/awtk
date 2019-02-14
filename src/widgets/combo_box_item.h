@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  combo_box_item
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -31,6 +31,9 @@ BEGIN_C_DECLS
  * @parent widget_t
  * @annotation ["scriptable"]
  * ComboBox Item控件。
+ *
+ * 本类仅供combo\_box控件内部使用。
+ *
  */
 typedef struct _combo_box_item_t {
   widget_t widget;

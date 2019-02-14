@@ -1,7 +1,11 @@
 ﻿#include "widgets/button.h"
+#include "base/idle.h"
 #include "base/canvas.h"
 #include "base/widget.h"
 #include "base/layout.h"
+#include "base/window_manager.h"
+#include "widgets/view.h"
+#include "widgets/window.h"
 #include "font_dummy.h"
 #include "lcd_log.h"
 #include "gtest/gtest.h"
@@ -38,11 +42,40 @@ TEST(Button, clone) {
   value_set_int(&v1, 200);
   ASSERT_EQ(widget_set_prop(w1, WIDGET_PROP_REPEAT, &v1), RET_OK);
   widget_set_self_layout_params(w1, "1", "2", "3", "4");
-  widget_set_children_layout_params(w1, "r0 c0 x10, y10, s10");
+  widget_set_children_layout(w1, "default(r=0,c=0,x=10,y=10,s=10)");
+  widget_set_sensitive(w1, FALSE);
+  widget_set_floating(w1, TRUE);
   ASSERT_EQ(button_cast(w1), w1);
 
   widget_t* w2 = widget_clone(w1, NULL);
   ASSERT_EQ(widget_equal(w1, w2), TRUE);
   widget_destroy(w1);
   widget_destroy(w2);
+}
+
+static ret_t button_on_click_to_remove_parent(void* ctx, event_t* e) {
+  widget_t* target = WIDGET(e->target);
+  widget_destroy(target->parent);
+
+  return RET_OK;
+}
+
+TEST(Button, remove_parent) {
+  pointer_event_t e;
+  widget_t* w = window_create(NULL, 0, 0, 320, 240);
+  widget_t* group = view_create(w, 20, 20, 200, 200);
+  widget_t* b = button_create(group, 10, 10, 30, 40);
+
+  widget_resize(w, 320, 240);
+  widget_on(b, EVT_CLICK, button_on_click_to_remove_parent, NULL);
+  e.e = event_init(EVT_POINTER_DOWN, w);
+  e.x = 35;
+  e.y = 35;
+  window_manager_dispatch_input_event(w->parent, (event_t*)(&e));
+
+  e.e = event_init(EVT_POINTER_UP, w);
+  window_manager_dispatch_input_event(w->parent, (event_t*)(&e));
+
+  widget_destroy(w);
+  idle_dispatch();
 }

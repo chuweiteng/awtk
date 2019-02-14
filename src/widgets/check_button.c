@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  check_button
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -45,11 +45,16 @@ static ret_t check_button_on_event(widget_t* widget, event_t* e) {
       pointer_event_t* evt = (pointer_event_t*)e;
 
       if (check_button->pressed && widget_is_point_in(widget, evt->x, evt->y, FALSE)) {
+        pointer_event_t click = *evt;
+        click.e.type = EVT_CLICK;
+
         if (check_button->radio) {
           check_button_set_value(widget, TRUE);
         } else {
           check_button_set_value(widget, !(check_button->value));
         }
+
+        widget_dispatch(widget, (event_t*)&click);
       }
 
       check_button->pressed = FALSE;
@@ -98,7 +103,7 @@ ret_t check_button_set_value(widget_t* widget, bool_t value) {
 
   check_button_set_value_only(widget, value);
 
-  if (check_button->radio && widget->parent != NULL) {
+  if (check_button->radio && widget->parent != NULL && value) {
     widget_t* parent = widget->parent;
 
     WIDGET_FOR_EACH_CHILD_BEGIN(parent, iter, i)
@@ -119,7 +124,7 @@ static ret_t check_button_get_prop(widget_t* widget, const char* name, value_t* 
     value_set_bool(v, check_button->value);
     return RET_OK;
   } else if (tk_str_eq(name, WIDGET_PROP_STATE_FOR_STYLE)) {
-    value_set_int(v, widget_get_state_for_style(widget, check_button->value));
+    value_set_str(v, widget_get_state_for_style(widget, FALSE, check_button->value));
     return RET_OK;
   }
 
@@ -161,22 +166,21 @@ static const widget_vtable_t s_radio_button_vtable = {
 };
 
 widget_t* check_button_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  check_button_t* check_button = TKMEM_ZALLOC(check_button_t);
-  widget_t* widget = WIDGET(check_button);
+  widget_t* widget = widget_create(parent, &s_check_button_vtable, x, y, w, h);
+  check_button_t* check_button = CHECK_BUTTON(widget);
   return_value_if_fail(check_button != NULL, NULL);
 
-  widget_init(widget, parent, &s_check_button_vtable, x, y, w, h);
+  check_button->radio = FALSE;
+  widget->state = WIDGET_STATE_NORMAL;
   check_button_set_value_only(widget, FALSE);
 
   return widget;
 }
 
 widget_t* check_button_create_radio(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  check_button_t* check_button = TKMEM_ZALLOC(check_button_t);
-  widget_t* widget = WIDGET(check_button);
+  widget_t* widget = widget_create(parent, &s_radio_button_vtable, x, y, w, h);
+  check_button_t* check_button = CHECK_BUTTON(widget);
   return_value_if_fail(check_button != NULL, NULL);
-
-  widget_init(widget, parent, &s_radio_button_vtable, x, y, w, h);
 
   check_button->radio = TRUE;
   widget->state = WIDGET_STATE_NORMAL;

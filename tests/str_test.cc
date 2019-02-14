@@ -4,6 +4,16 @@
 
 using std::string;
 
+TEST(Str, demo) {
+  str_t s;
+  str_init(&s, 0);
+
+  str_append(&s, "abc");
+  str_append(&s, "123");
+
+  str_reset(&s);
+}
+
 TEST(Str, basic) {
   str_t str;
   str_t* s = NULL;
@@ -101,6 +111,14 @@ TEST(Str, value) {
   value_set_wstr(&v, L"abc");
   ASSERT_EQ(str_from_value(s, &v), RET_OK);
   ASSERT_EQ(string(s->str), string("abc"));
+
+  value_set_float32(&v, 100);
+  ASSERT_EQ(str_from_value(s, &v), RET_OK);
+  ASSERT_EQ(string(s->str), string("100.000000"));
+
+  value_set_double(&v, 100);
+  ASSERT_EQ(str_from_value(s, &v), RET_OK);
+  ASSERT_EQ(string(s->str), string("100.000000"));
 
   str_reset(s);
 }

@@ -78,23 +78,26 @@
 * ImageValue
 * SystemBar
 * Canvas
+* SlideMenu
+* API doc到手册转换工具。
+* 参考手册
 
 ## 短期计划(顺序不定)
-* menu
 * tree view
-* text editor
-* port code editor
 * property sheet
 * file browser
+* text editor
+* port code editor
 * calendar
 * chart
+* menu
 * drag & drop
 * tableview
 * python binging 
 * 音频接口。
 * 键盘导航
 * 事件录制与重放。
-* API doc到PDF转换工具
+* 高亮对话框(背景模糊)
 
 ## 长期计划
 * ios移植

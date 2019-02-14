@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  edit
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -826,6 +826,9 @@ ret_t edit_get_prop(widget_t* widget, const char* name, value_t* v) {
   } else if (tk_str_eq(name, WIDGET_PROP_TIPS)) {
     value_set_str(v, edit->tips);
     return RET_OK;
+  } else if (tk_str_eq(name, WIDGET_PROP_VALUE)) {
+    value_set_wstr(v, widget->text.str);
+    return RET_OK;
   }
 
   return RET_NOT_FOUND;
@@ -913,6 +916,11 @@ ret_t edit_set_prop(widget_t* widget, const char* name, const value_t* v) {
   } else if (tk_str_eq(name, WIDGET_PROP_TEXT)) {
     edit->offset_x = 0;
     edit_set_cursor_pos(widget, 0x0fffffff, 0x0fffffff);
+    return RET_OK;
+  } else if (tk_str_eq(name, WIDGET_PROP_VALUE)) {
+    edit->offset_x = 0;
+    edit_set_cursor_pos(widget, 0x0fffffff, 0x0fffffff);
+    wstr_from_value(&(widget->text), v);
     return RET_OK;
   }
 
@@ -1104,6 +1112,15 @@ static ret_t edit_on_clear(void* ctx, event_t* e) {
   return edit_clear(EDIT(ctx));
 }
 
+static ret_t edit_on_password_visible(void* ctx, event_t* e) {
+  edit_t* edit = EDIT(ctx);
+  widget_t* widget = WIDGET(e->target);
+
+  edit->password_visible = widget_get_prop_bool(widget, WIDGET_PROP_VALUE, edit->password_visible);
+
+  return RET_OK;
+}
+
 static ret_t edit_hook_button(void* ctx, const void* iter) {
   widget_t* widget = WIDGET(iter);
   widget_t* edit = WIDGET(ctx);
@@ -1116,13 +1133,15 @@ static ret_t edit_hook_button(void* ctx, const void* iter) {
       widget_on(widget, EVT_CLICK, edit_on_dec, edit);
     } else if (tk_str_eq(name, "clear")) {
       widget_on(widget, EVT_CLICK, edit_on_clear, edit);
+    } else if (tk_str_eq(name, "visible")) {
+      widget_on(widget, EVT_VALUE_CHANGED, edit_on_password_visible, edit);
     }
   }
 
   return RET_OK;
 }
 
-static ret_t edit_destroy(widget_t* widget) {
+static ret_t edit_on_destroy(widget_t* widget) {
   edit_t* edit = EDIT(widget);
   if (edit->timer_id != TK_INVALID_ID) {
     timer_remove(edit->timer_id);
@@ -1170,16 +1189,14 @@ static const widget_vtable_t s_edit_vtable = {.size = sizeof(edit_t),
                                               .on_paint_self = edit_on_paint_self,
                                               .set_prop = edit_set_prop,
                                               .get_prop = edit_get_prop,
-                                              .destroy = edit_destroy,
+                                              .on_destroy = edit_on_destroy,
                                               .on_event = edit_on_event};
 
-widget_t* edit_init(widget_t* parent, edit_t* edit, xy_t x, xy_t y, wh_t w, wh_t h,
-                    const widget_vtable_t* vt) {
-  widget_t* widget = WIDGET(edit);
-
-  return_value_if_fail(edit != NULL, NULL);
-
-  widget_init(widget, parent, vt, x, y, w, h);
+widget_t* edit_create_ex(widget_t* parent, const widget_vtable_t* vt, xy_t x, xy_t y, wh_t w,
+                         wh_t h) {
+  widget_t* widget = widget_create(parent, vt, x, y, w, h);
+  edit_t* edit = EDIT(widget);
+  return_value_if_fail(widget != NULL, NULL);
 
   edit->left_margin = 2;
   edit->right_margin = 2;
@@ -1193,16 +1210,8 @@ widget_t* edit_init(widget_t* parent, edit_t* edit, xy_t x, xy_t y, wh_t w, wh_t
   return widget;
 }
 
-widget_t* edit_create_ex(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h,
-                         const widget_vtable_t* vt) {
-  edit_t* edit = TKMEM_ZALLOC(edit_t);
-  return_value_if_fail(edit != NULL, NULL);
-
-  return edit_init(parent, edit, x, y, w, h, vt);
-}
-
 widget_t* edit_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  return edit_create_ex(parent, x, y, w, h, &s_edit_vtable);
+  return edit_create_ex(parent, &s_edit_vtable, x, y, w, h);
 }
 
 widget_t* edit_cast(widget_t* widget) {

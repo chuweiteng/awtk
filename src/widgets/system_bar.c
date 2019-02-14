@@ -1,9 +1,9 @@
-﻿/**
+/**
  * File:   system_bar.c
  * Author: AWTK Develop Team
  * Brief:  system_bar
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,7 +29,7 @@
 #include "widgets/system_bar.h"
 #include "base/window_manager.h"
 
-static const char* s_system_bar_properties[] = {WIDGET_PROP_THEME, WIDGET_PROP_SCRIPT, NULL};
+static const char* s_system_bar_properties[] = {WIDGET_PROP_THEME, NULL};
 
 static ret_t system_bar_on_request_close_window(void* ctx, event_t* e) {
   widget_t* widget = WIDGET(ctx);
@@ -56,7 +56,9 @@ static ret_t system_bar_on_top_window_changed(void* ctx, event_t* e) {
   log_debug("%s\n", top_window->name);
 
   if (title != NULL) {
-    if (top_window->text.str) {
+    if (top_window->tr_text) {
+      widget_set_tr_text(title, top_window->tr_text);
+    } else if (top_window->text.str) {
       widget_set_text(title, top_window->text.str);
     } else {
       widget_set_text_utf8(title, top_window->name);
@@ -96,13 +98,12 @@ static const widget_vtable_t s_system_bar_vtable = {
     .on_paint_self = window_base_on_paint_self,
     .on_paint_begin = window_base_on_paint_begin,
     .on_paint_end = window_base_on_paint_end,
-    .destroy = window_base_destroy};
+    .on_destroy = window_base_on_destroy};
 
 widget_t* system_bar_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  system_bar_t* system_bar = TKMEM_ZALLOC(system_bar_t);
-  widget_t* widget = WIDGET(system_bar);
+  widget_t* widget = window_base_create(parent, &s_system_bar_vtable, x, y, w, h);
+  return_value_if_fail(widget != NULL, NULL);
 
-  window_base_init(widget, parent, &s_system_bar_vtable, x, y, w, h);
   widget_on(widget->parent, EVT_TOP_WINDOW_CHANGED, system_bar_on_top_window_changed, widget);
 
   return widget;

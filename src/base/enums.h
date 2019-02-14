@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  enumerations
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -34,11 +34,7 @@ typedef struct _key_type_value_t {
 
 enum { TYPE_INT = 0, TYPE_COLOR, TYPE_STRING, TYPE_WSTRING, TYPE_BOOL };
 
-const key_type_value_t* style_id_find(const char* name);
-const key_type_value_t* style_id_find_by_value(uint32_t value);
-
 const key_type_value_t* input_type_find(const char* name);
-const key_type_value_t* widget_state_find(const char* name);
 const key_type_value_t* window_closable_type_find(const char* name);
 const key_type_value_t* align_v_type_find(const char* name);
 const key_type_value_t* align_h_type_find(const char* name);

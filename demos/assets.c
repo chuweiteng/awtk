@@ -138,6 +138,7 @@
 #include "assets/inc/images/battery_0.res"
 #include "assets/inc/images/edit_clear_p.res"
 #include "assets/inc/images/arrow_up_o.res"
+#include "assets/inc/images/visible.res"
 #include "assets/inc/images/ani1.res"
 #include "assets/inc/images/arrow_left_o.res"
 #include "assets/inc/images/ani3.res"
@@ -186,7 +187,6 @@
 #include "assets/inc/images/slider_bg.res"
 #include "assets/inc/images/right_on.res"
 #include "assets/inc/images/guage_pointer.res"
-#include "assets/inc/images/bg800x480.res"
 #include "assets/inc/images/left_off.res"
 #include "assets/inc/images/1.res"
 #include "assets/inc/images/progress_circle.res"
@@ -218,6 +218,7 @@
 #include "assets/inc/images/edit_clear_n.res"
 #include "assets/inc/images/ani8.res"
 #include "assets/inc/images/logo.res"
+#include "assets/inc/images/invisible.res"
 #include "assets/inc/images/slider_drag_p.res"
 #include "assets/inc/images/backspace.res"
 #include "assets/inc/images/arrow_left_p.res"
@@ -235,7 +236,6 @@
 #include "assets/inc/images/earth.data"
 #include "assets/inc/images/shift.data"
 #include "assets/inc/images/arrow_up_p.data"
-#include "assets/inc/images/bg800x480.data"
 #include "assets/inc/images/discovery_active.data"
 #include "assets/inc/images/en.data"
 #include "assets/inc/images/right_on.data"
@@ -251,11 +251,13 @@
 #include "assets/inc/images/left_on.data"
 #include "assets/inc/images/1.data"
 #include "assets/inc/images/question.data"
+#include "assets/inc/images/invisible.data"
 #include "assets/inc/images/guage_bg.data"
 #include "assets/inc/images/num_5.data"
 #include "assets/inc/images/num_dot.data"
 #include "assets/inc/images/arrow_right_n.data"
 #include "assets/inc/images/bee.data"
+#include "assets/inc/images/visible.data"
 #include "assets/inc/images/clock_bg.data"
 #include "assets/inc/images/me_active.data"
 #include "assets/inc/images/cursor.data"
@@ -347,26 +349,19 @@
 #ifdef WITH_VGCANVAS
 #include "assets/inc/images/pointer_4.bsvg"
 #include "assets/inc/images/china.bsvg"
-#include "assets/inc/images/pointer_2.bsvg"
-#include "assets/inc/images/boy.bsvg"
-#include "assets/inc/images/circle_cs.bsvg"
-#include "assets/inc/images/language.bsvg"
-#include "assets/inc/images/pointer_3.bsvg"
-#include "assets/inc/images/pointer_left.bsvg"
 #include "assets/inc/images/pointer_1.bsvg"
 #include "assets/inc/images/pointer.bsvg"
-#include "assets/inc/images/pointer_red.bsvg"
 #include "assets/inc/images/girl.bsvg"
 #endif /*WITH_VGCANVAS*/
-#ifdef WITH_STB_FONT
+#if defined(WITH_STB_FONT) || defined(WITH_FT_FONT)
 #ifdef WITH_MINI_FONT
 #include "assets/inc/fonts/default.mini.res"
 #else /*WITH_MINI_FONT*/
 #include "assets/inc/fonts/default.res"
 #endif /*WITH_MINI_FONT*/
-#else  /*WITH_STB_FONT*/
+#else  /*WITH_STB_FONT or WITH_FT_FONT*/
 #include "assets/inc/fonts/default.data"
-#endif /*WITH_STB_FONT*/
+#endif /*WITH_STB_FONT or WITH_FT_FONT*/
 #endif /*WITH_FS_RES*/
 
 ret_t assets_init(void) {
@@ -472,7 +467,6 @@ ret_t assets_init(void) {
   assets_manager_add(rm, image_earth);
   assets_manager_add(rm, image_shift);
   assets_manager_add(rm, image_arrow_up_p);
-  assets_manager_add(rm, image_bg800x480);
   assets_manager_add(rm, image_discovery_active);
   assets_manager_add(rm, image_en);
   assets_manager_add(rm, image_right_on);
@@ -488,11 +482,13 @@ ret_t assets_init(void) {
   assets_manager_add(rm, image_left_on);
   assets_manager_add(rm, image_1);
   assets_manager_add(rm, image_question);
+  assets_manager_add(rm, image_invisible);
   assets_manager_add(rm, image_guage_bg);
   assets_manager_add(rm, image_num_5);
   assets_manager_add(rm, image_num_dot);
   assets_manager_add(rm, image_arrow_right_n);
   assets_manager_add(rm, image_bee);
+  assets_manager_add(rm, image_visible);
   assets_manager_add(rm, image_clock_bg);
   assets_manager_add(rm, image_me_active);
   assets_manager_add(rm, image_cursor);
@@ -600,15 +596,8 @@ ret_t assets_init(void) {
 #ifdef WITH_VGCANVAS
   assets_manager_add(rm, image_pointer_4);
   assets_manager_add(rm, image_china);
-  assets_manager_add(rm, image_pointer_2);
-  assets_manager_add(rm, image_boy);
-  assets_manager_add(rm, image_circle_cs);
-  assets_manager_add(rm, image_language);
-  assets_manager_add(rm, image_pointer_3);
-  assets_manager_add(rm, image_pointer_left);
   assets_manager_add(rm, image_pointer_1);
   assets_manager_add(rm, image_pointer);
-  assets_manager_add(rm, image_pointer_red);
   assets_manager_add(rm, image_girl);
 #endif /*WITH_VGCANVAS*/
 #endif

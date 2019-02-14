@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  rich_text_parser
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is dirich_text_parseributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -76,7 +76,7 @@ static void xml_rich_text_on_start(XmlBuilder* thiz, const char* tag, const char
       if (tk_str_eq(key, "size")) {
         b->font->size = tk_atoi(value);
       } else if (tk_str_eq(key, "color")) {
-        b->font->color = color_parse_simple(value);
+        b->font->color = color_parse(value);
       } else if (tk_str_eq(key, "align_v")) {
         const key_type_value_t* kv = align_v_type_find(value);
         if (kv != NULL) {

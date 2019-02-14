@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  input method sdl
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -50,9 +50,8 @@ static ret_t input_method_sdl_request(input_method_t* im, widget_t* widget) {
     r.w = widget->w;
     r.h = widget->h;
 
-    /*FIXME:*/
-    SDL_SetTextInputRect(to_sdl_global(&r));
     SDL_StartTextInput();
+    SDL_SetTextInputRect(to_sdl_global(&r));
   } else {
     SDL_StopTextInput();
   }

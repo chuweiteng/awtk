@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  image base
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -125,7 +125,7 @@ ret_t image_base_set_prop(widget_t* widget, const char* name, const value_t* v) 
   return RET_NOT_FOUND;
 }
 
-ret_t image_base_destroy(widget_t* widget) {
+ret_t image_base_on_destroy(widget_t* widget) {
   image_base_t* image = IMAGE_BASE(widget);
   return_value_if_fail(image != NULL, RET_BAD_PARAMS);
 

@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  image_loader interface
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,7 +22,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_FREE TKMEM_FREE
 #define STBI_MALLOC TKMEM_ALLOC
-#define STBI_REALLOC(p, s) TKMEM_REALLOC(char, p, s)
+#define STBI_REALLOC(p, s) TKMEM_REALLOC(p, s)
 
 #include "tkc/mem.h"
 

@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  emitter dispatcher
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -204,6 +204,33 @@ ret_t emitter_off_by_func(emitter_t* emitter, uint32_t etype, event_func_t handl
   return RET_FAIL;
 }
 
+ret_t emitter_off_by_ctx(emitter_t* emitter, void* ctx) {
+  return_value_if_fail(emitter != NULL, RET_BAD_PARAMS);
+
+  if (emitter->items) {
+    emitter_item_t* iter = emitter->items;
+    emitter_item_t* prev = emitter->items;
+
+    while (iter != NULL) {
+      emitter_item_t* next = iter->next;
+
+      if (iter->ctx == ctx) {
+        emitter_remove(emitter, prev, iter);
+
+        if (prev == iter) {
+          prev = next;
+        }
+      } else {
+        prev = iter;
+      }
+
+      iter = next;
+    }
+  }
+
+  return RET_OK;
+}
+
 ret_t emitter_enable(emitter_t* emitter) {
   return_value_if_fail(emitter != NULL, RET_BAD_PARAMS);
   emitter->enable = TRUE;
@@ -252,4 +279,10 @@ ret_t emitter_set_on_destroy(emitter_t* emitter, uint32_t id, tk_destroy_t on_de
   item->on_destroy_ctx = on_destroy_ctx;
 
   return RET_OK;
+}
+
+emitter_t* emitter_cast(emitter_t* emitter) {
+  return_value_if_fail(emitter != NULL, NULL);
+
+  return emitter;
 }

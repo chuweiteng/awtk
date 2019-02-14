@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  image_animation
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,13 +27,13 @@
 
 static ret_t image_animation_on_paint_self(widget_t* widget, canvas_t* c) {
   bitmap_t bitmap;
-  char name[NAME_LEN + 1];
+  char name[TK_NAME_LEN + 1];
   image_animation_t* image_animation = IMAGE_ANIMATION(widget);
 
   if (image_animation->image != NULL && image_animation->sequence != NULL &&
       image_animation->index >= 0) {
     memset(name, 0x00, sizeof(name));
-    tk_strncpy(name, image_animation->image, NAME_LEN);
+    tk_strncpy(name, image_animation->image, TK_NAME_LEN);
     name[strlen(name)] = image_animation->sequence[image_animation->index];
 
     if (widget_load_image(widget, name, &bitmap) == RET_OK) {
@@ -93,7 +93,7 @@ static ret_t image_animation_set_prop(widget_t* widget, const char* name, const 
   return RET_NOT_FOUND;
 }
 
-static ret_t image_animation_destroy(widget_t* widget) {
+static ret_t image_animation_on_destroy(widget_t* widget) {
   image_animation_t* image_animation = IMAGE_ANIMATION(widget);
 
   if (image_animation->timer_id != TK_INVALID_ID) {
@@ -110,7 +110,7 @@ static const widget_vtable_t s_image_animation_vtable = {
     .size = sizeof(image_animation_t),
     .type = WIDGET_TYPE_IMAGE_ANIMATION,
     .create = image_animation_create,
-    .destroy = image_animation_destroy,
+    .on_destroy = image_animation_on_destroy,
     .get_prop = image_animation_get_prop,
     .set_prop = image_animation_set_prop,
     .on_paint_self = image_animation_on_paint_self};
@@ -143,18 +143,18 @@ static ret_t image_animation_on_open(void* ctx, event_t* e) {
 
 widget_t* image_animation_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
   widget_t* win = widget_get_window(parent);
-  image_animation_t* image_animation = TKMEM_ZALLOC(image_animation_t);
-  widget_t* widget = WIDGET(image_animation);
+  widget_t* widget = widget_create(parent, &s_image_animation_vtable, x, y, w, h);
+  image_animation_t* image_animation = IMAGE_ANIMATION(widget);
+
   return_value_if_fail(image_animation != NULL, NULL);
 
   image_animation->index = 0;
   image_animation->interval = 16;
   image_animation->loop = TRUE;
   image_animation->auto_play = FALSE;
-
   widget_on(win, EVT_WINDOW_WILL_OPEN, image_animation_on_open, image_animation);
 
-  return widget_init(widget, parent, &s_image_animation_vtable, x, y, w, h);
+  return widget;
 }
 
 ret_t image_animation_set_loop(widget_t* widget, bool_t loop) {

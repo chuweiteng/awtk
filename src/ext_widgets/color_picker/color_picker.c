@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  color_picker
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -317,12 +317,11 @@ static ret_t color_picker_on_window_will_open(void* ctx, event_t* e) {
 }
 
 widget_t* color_picker_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  color_picker_t* color_picker = TKMEM_ZALLOC(color_picker_t);
-  widget_t* widget = WIDGET(color_picker);
+  widget_t* widget = widget_create(parent, &s_color_picker_vtable, x, y, w, h);
+  color_picker_t* color_picker = COLOR_PICKER(widget);
   widget_t* win = widget_get_window(parent);
   return_value_if_fail(color_picker != NULL, NULL);
 
-  widget_init(widget, parent, &s_color_picker_vtable, x, y, w, h);
   widget_on(win, EVT_WINDOW_WILL_OPEN, color_picker_on_window_will_open, color_picker);
   color_picker_set_color(widget, "gold");
 
@@ -350,7 +349,7 @@ ret_t color_picker_set_color(widget_t* widget, const char* color) {
   color_picker_t* color_picker = COLOR_PICKER(widget);
   return_value_if_fail(widget != NULL && color != NULL, RET_BAD_PARAMS);
 
-  color_picker->init_c = color_parse_simple(color);
+  color_picker->init_c = color_parse(color);
   color_picker_update_color(widget, color_picker->init_c);
 
   return RET_OK;

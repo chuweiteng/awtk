@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  width char
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -30,6 +30,20 @@ BEGIN_C_DECLS
 /**
  * @class wstr_t
  * 可变长度的宽字符字符串。
+ *
+ * 示例：
+ *
+ * ```c
+ *  wstr_t s;
+ *  wstr_init(&s, 0);
+ *
+ *  wstr_append(&s, L"abc");
+ *  wstr_append(&s, L"123");
+ *
+ *  wstr_reset(&s);
+ * ```
+ * > 先调wstr\_init进行初始化，最后调用wstr\_reset释放内存。
+ *
  */
 typedef struct _wstr_t {
   /**
@@ -72,6 +86,15 @@ wstr_t* wstr_init(wstr_t* str, uint32_t capacity);
  * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
  */
 ret_t wstr_set(wstr_t* str, const wchar_t* text);
+
+/**
+ * @method wstr_clear
+ * 清除字符串内容。
+ * @param {wstr_t*} str str对象。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t wstr_clear(wstr_t* str);
 
 /**
  * @method wstr_set_utf8
@@ -118,6 +141,27 @@ ret_t wstr_remove(wstr_t* str, uint32_t offset, uint32_t nr);
 ret_t wstr_insert(wstr_t* str, uint32_t offset, const wchar_t* text, uint32_t nr);
 
 /**
+ * @method wstr_append
+ * 追加字符串。
+ * @param {wstr_t*} str str对象。
+ * @param {wchar_t*} text 要追加的字符串。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t wstr_append(wstr_t* str, const wchar_t* text);
+
+/**
+ * @method wstr_append_with_len
+ * 追加字符串。
+ * @param {wstr_t*} str str对象。
+ * @param {wchar_t*} text 要追加的字符串。
+ * @param {uint32_t} len 字符串长度。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t wstr_append_with_len(wstr_t* str, const wchar_t* text, uint32_t len);
+
+/**
  * @method wstr_push
  * 追加一个字符。
  * @param {wstr_t*} str str对象。
@@ -135,17 +179,6 @@ ret_t wstr_push(wstr_t* str, const wchar_t c);
  * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
  */
 ret_t wstr_pop(wstr_t* str);
-
-/**
- * @method wstr_push_str
- * 追加一个字符。
- * @param {wstr_t*} str str对象。
- * @param {wchar_t*} s 字符串。
- * @param {uint32_t} size 字符串长度。
- *
- * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
- */
-ret_t wstr_push_str(wstr_t* str, const wchar_t* s, uint32_t size);
 
 /**
  * @method wstr_push_int

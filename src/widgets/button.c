@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  button
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,6 +25,16 @@
 #include "widgets/button.h"
 #include "base/widget_vtable.h"
 
+static ret_t button_remove_timer(widget_t* widget) {
+  button_t* button = BUTTON(widget);
+  if (button->timer_id != TK_INVALID_ID) {
+    timer_remove(button->timer_id);
+    button->timer_id = TK_INVALID_ID;
+  }
+
+  return RET_OK;
+}
+
 static ret_t button_on_repeat(const timer_info_t* info) {
   pointer_event_t evt;
   button_t* button = BUTTON(info->ctx);
@@ -36,23 +46,28 @@ static ret_t button_on_repeat(const timer_info_t* info) {
   button->repeat_nr++;
   widget_dispatch(widget, (event_t*)&evt);
 
-  if (button->repeat_nr == 4) {
-    evt.e = event_init(EVT_LONG_PRESS, widget);
-    widget_dispatch(widget, (event_t*)&evt);
-  }
-
   return RET_REPEAT;
+}
+
+static ret_t button_on_long_press(const timer_info_t* info) {
+  pointer_event_t evt;
+  widget_t* widget = WIDGET(info->ctx);
+
+  evt.x = 0;
+  evt.y = 0;
+  evt.e = event_init(EVT_LONG_PRESS, widget);
+
+  button_remove_timer(widget);
+  widget_dispatch(widget, (event_t*)&evt);
+
+  return RET_REMOVE;
 }
 
 static ret_t button_pointer_up_cleanup(widget_t* widget) {
   button_t* button = BUTTON(widget);
 
-  if (button->timer_id != TK_INVALID_ID) {
-    timer_remove(button->timer_id);
-    button->timer_id = TK_INVALID_ID;
-  }
-
   button->pressed = FALSE;
+  button_remove_timer(widget);
   widget_ungrab(widget->parent, widget);
   widget_set_state(widget, WIDGET_STATE_NORMAL);
 
@@ -68,13 +83,13 @@ static ret_t button_on_event(widget_t* widget, event_t* e) {
       button->repeat_nr = 0;
       button->pressed = TRUE;
       widget_set_state(widget, WIDGET_STATE_PRESSED);
-      if (button->timer_id != TK_INVALID_ID) {
-        timer_remove(button->timer_id);
-        button->timer_id = TK_INVALID_ID;
-      }
+      button_remove_timer(widget);
       if (button->repeat > 0) {
         button->timer_id = timer_add(button_on_repeat, widget, button->repeat);
+      } else {
+        button->timer_id = timer_add(button_on_long_press, widget, TK_LONG_PRESS_TIME);
       }
+
       widget_grab(widget->parent, widget);
       break;
     }
@@ -132,6 +147,17 @@ static ret_t button_get_prop(widget_t* widget, const char* name, value_t* v) {
   return RET_NOT_FOUND;
 }
 
+static ret_t button_get_prop_default_value(widget_t* widget, const char* name, value_t* v) {
+  return_value_if_fail(widget != NULL && name != NULL && v != NULL, RET_BAD_PARAMS);
+
+  if (tk_str_eq(name, WIDGET_PROP_REPEAT)) {
+    value_set_int(v, 0);
+    return RET_OK;
+  }
+
+  return RET_NOT_FOUND;
+}
+
 static ret_t button_set_prop(widget_t* widget, const char* name, const value_t* v) {
   return_value_if_fail(widget != NULL && name != NULL && v != NULL, RET_BAD_PARAMS);
 
@@ -142,34 +168,33 @@ static ret_t button_set_prop(widget_t* widget, const char* name, const value_t* 
   return RET_NOT_FOUND;
 }
 
-static ret_t button_destroy(widget_t* widget) {
-  button_t* button = BUTTON(widget);
-  if (button->timer_id != TK_INVALID_ID) {
-    timer_remove(button->timer_id);
-    button->timer_id = TK_INVALID_ID;
-  }
-
-  return RET_OK;
+static ret_t button_on_destroy(widget_t* widget) {
+  return button_remove_timer(widget);
 }
 
 static const char* s_button_properties[] = {WIDGET_PROP_REPEAT, NULL};
-static const widget_vtable_t s_button_vtable = {.size = sizeof(button_t),
-                                                .type = WIDGET_TYPE_BUTTON,
-                                                .create = button_create,
-                                                .clone_properties = s_button_properties,
-                                                .persistent_properties = s_button_properties,
-                                                .on_event = button_on_event,
-                                                .set_prop = button_set_prop,
-                                                .get_prop = button_get_prop,
-                                                .destroy = button_destroy,
-                                                .on_paint_self = widget_on_paint_self_default};
+static const widget_vtable_t s_button_vtable = {
+    .size = sizeof(button_t),
+    .type = WIDGET_TYPE_BUTTON,
+    .enable_pool = TRUE,
+    .create = button_create,
+    .clone_properties = s_button_properties,
+    .persistent_properties = s_button_properties,
+    .on_event = button_on_event,
+    .set_prop = button_set_prop,
+    .get_prop = button_get_prop,
+    .get_prop_default_value = button_get_prop_default_value,
+    .on_destroy = button_on_destroy,
+    .on_paint_self = widget_on_paint_self_default};
 
 widget_t* button_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  button_t* button = TKMEM_ZALLOC(button_t);
-  widget_t* widget = WIDGET(button);
+  widget_t* widget = widget_create(parent, &s_button_vtable, x, y, w, h);
+  button_t* button = BUTTON(widget);
   return_value_if_fail(button != NULL, NULL);
 
-  widget_init(widget, parent, &s_button_vtable, x, y, w, h);
+  button->repeat = 0;
+  button->repeat_nr = 0;
+  button->pressed = FALSE;
   button->timer_id = TK_INVALID_ID;
 
   return widget;

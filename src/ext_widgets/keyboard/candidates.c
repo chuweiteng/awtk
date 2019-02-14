@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  candidates
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -144,7 +144,7 @@ static ret_t candidates_update_candidates(widget_t* widget, const char* strs, ui
   return RET_OK;
 }
 
-static ret_t candidates_destroy_default(widget_t* widget) {
+static ret_t candidates_on_destroy_default(widget_t* widget) {
   candidates_t* candidates = CANDIDATES(widget);
   input_method_off(input_method(), candidates->event_id);
 
@@ -161,7 +161,7 @@ static const widget_vtable_t s_candidates_vtable = {.size = sizeof(candidates_t)
                                                     .type = WIDGET_TYPE_CANDIDATES,
                                                     .create = candidates_create,
                                                     .on_paint_self = candidates_on_paint_self,
-                                                    .destroy = candidates_destroy_default};
+                                                    .on_destroy = candidates_on_destroy_default};
 
 static ret_t candidates_on_im_candidates_event(void* ctx, event_t* e) {
   widget_t* widget = WIDGET(ctx);
@@ -171,11 +171,9 @@ static ret_t candidates_on_im_candidates_event(void* ctx, event_t* e) {
 }
 
 widget_t* candidates_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  candidates_t* candidates = TKMEM_ZALLOC(candidates_t);
-  widget_t* widget = WIDGET(candidates);
+  widget_t* widget = widget_create(parent, &s_candidates_vtable, x, y, w, h);
+  candidates_t* candidates = CANDIDATES(widget);
   return_value_if_fail(candidates != NULL, NULL);
-
-  widget_init(widget, parent, &s_candidates_vtable, x, y, w, h);
 
   candidates->event_id = input_method_on(input_method(), EVT_IM_SHOW_CANDIDATES,
                                          candidates_on_im_candidates_event, candidates);

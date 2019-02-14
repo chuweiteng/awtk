@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  slider
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,9 +25,6 @@
 #include "widgets/slider.h"
 #include "base/widget_vtable.h"
 #include "base/image_manager.h"
-
-static ret_t slider_set_value_internal(widget_t* widget, uint16_t value, event_type_t etype,
-                                       bool_t force);
 
 static ret_t slider_get_dragger_rect(widget_t* widget, rect_t* r) {
   slider_t* slider = SLIDER(widget);
@@ -95,7 +92,7 @@ static ret_t slider_on_paint_self(widget_t* widget, canvas_t* c) {
   image_name = style_get_str(style, STYLE_ID_FG_IMAGE, NULL);
   draw_type =
       (image_draw_type_t)style_get_int(style, STYLE_ID_FG_IMAGE_DRAW_TYPE, IMAGE_DRAW_PATCH3_X);
-  if (image_name && image_manager_load(image_manager(), image_name, &img) == RET_OK) {
+  if (image_name && image_manager_get_bitmap(image_manager(), image_name, &img) == RET_OK) {
     if (slider->vertical) {
       r.x = 0;
       r.w = widget->w;
@@ -127,7 +124,7 @@ static ret_t slider_on_paint_self(widget_t* widget, canvas_t* c) {
   image_name = style_get_str(style, STYLE_ID_BG_IMAGE, NULL);
   draw_type =
       (image_draw_type_t)style_get_int(style, STYLE_ID_BG_IMAGE_DRAW_TYPE, IMAGE_DRAW_PATCH3_X);
-  if (image_name && image_manager_load(image_manager(), image_name, &img) == RET_OK) {
+  if (image_name && image_manager_get_bitmap(image_manager(), image_name, &img) == RET_OK) {
     if (slider->vertical) {
       r.x = 0;
       r.w = widget->w;
@@ -145,7 +142,7 @@ static ret_t slider_on_paint_self(widget_t* widget, canvas_t* c) {
     canvas_fill_rect(c, r.x, r.y, r.w, r.h);
   }
   image_name = style_get_str(style, STYLE_ID_ICON, NULL);
-  if (image_name && image_manager_load(image_manager(), image_name, &img) == RET_OK) {
+  if (image_name && image_manager_get_bitmap(image_manager(), image_name, &img) == RET_OK) {
     canvas_draw_image_ex(c, &img, IMAGE_DRAW_CENTER, &r);
   }
 
@@ -220,8 +217,8 @@ static ret_t slider_on_event(widget_t* widget, event_t* e) {
   return RET_OK;
 }
 
-static ret_t slider_set_value_internal(widget_t* widget, uint16_t value, event_type_t etype,
-                                       bool_t force) {
+ret_t slider_set_value_internal(widget_t* widget, uint16_t value, event_type_t etype,
+                                bool_t force) {
   uint16_t step = 0;
   uint16_t offset = 0;
   slider_t* slider = SLIDER(widget);
@@ -355,11 +352,9 @@ static const widget_vtable_t s_slider_vtable = {.size = sizeof(slider_t),
                                                 .set_prop = slider_set_prop};
 
 widget_t* slider_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  slider_t* slider = TKMEM_ZALLOC(slider_t);
-  widget_t* widget = WIDGET(slider);
+  widget_t* widget = widget_create(parent, &s_slider_vtable, x, y, w, h);
+  slider_t* slider = SLIDER(widget);
   return_value_if_fail(slider != NULL, NULL);
-
-  widget_init(widget, parent, &s_slider_vtable, x, y, w, h);
 
   slider->min = 0;
   slider->max = 100;

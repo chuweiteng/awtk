@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  awtk
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -31,9 +31,10 @@
 #include "base/input_method.h"
 #include "base/image_manager.h"
 #include "base/window_manager.h"
-#include "base/widget_animator_manager.h"
 #include "base/widget_factory.h"
 #include "base/assets_manager.h"
+#include "base/widget_pool.h"
+#include "base/widget_animator_manager.h"
 #include "font_loader/font_loader_bitmap.h"
 
 #ifdef WITH_SDL
@@ -44,9 +45,7 @@
 #define clip_board_create clip_board_default_create
 #endif /*WITH_SDL*/
 
-#ifdef WITH_STB_FONT
-#include "font_loader/font_loader_stb.h"
-#endif /*WITH_STB_FONT*/
+#include "font_loader/font_loader_truetype.h"
 
 #ifdef WITH_STB_IMAGE
 #include "image_loader/image_loader_stb.h"
@@ -55,12 +54,12 @@
 static ret_t tk_add_font(const asset_info_t* res) {
   if (res->subtype == ASSET_TYPE_FONT_BMP) {
 #ifdef WITH_BITMAP_FONT
-    font_manager_add(font_manager(), font_bitmap_create(res->name, res->data, res->size));
+    font_manager_add_font(font_manager(), font_bitmap_create(res->name, res->data, res->size));
 #endif
   } else if (res->subtype == ASSET_TYPE_FONT_TTF) {
-#ifdef WITH_STB_FONT
-    font_manager_add(font_manager(), font_stb_create(res->name, res->data, res->size));
-#endif /*WITH_STB_FONT*/
+#ifdef WITH_TRUETYPE_FONT
+    font_manager_add_font(font_manager(), font_truetype_create(res->name, res->data, res->size));
+#endif /*WITH_TRUETYPE_FONT*/
   } else {
     log_debug("not support font type:%d\n", res->subtype);
   }
@@ -96,14 +95,16 @@ ret_t tk_init_internal(void) {
   image_loader = image_loader_stb();
 #endif /*WITH_STB_IMAGE*/
 
-#ifdef WITH_STB_FONT
-  font_loader = font_loader_stb();
+#ifdef WITH_TRUETYPE_FONT
+  font_loader = font_loader_truetype();
 #elif defined(WITH_BITMAP_FONT)
   font_loader = font_loader_bitmap();
-#endif /*WITH_STB_FONT*/
+#endif /*WITH_TRUETYPE_FONT*/
 
   return_value_if_fail(platform_prepare() == RET_OK, RET_FAIL);
-
+#ifdef WITH_WIDGET_POOL
+  return_value_if_fail(widget_pool_set(widget_pool_create(WITH_WIDGET_POOL)) == RET_OK, RET_FAIL);
+#endif /*WITH_WIDGET_POOL*/
   return_value_if_fail(timer_init(time_now_ms) == RET_OK, RET_FAIL);
   return_value_if_fail(idle_manager_set(idle_manager_create()) == RET_OK, RET_FAIL);
   return_value_if_fail(input_method_set(input_method_create()) == RET_OK, RET_FAIL);
@@ -162,6 +163,11 @@ ret_t tk_deinit_internal(void) {
 
   locale_info_destroy(locale_info());
   locale_info_set(NULL);
+
+#ifdef WITH_WIDGET_POOL
+  widget_pool_destroy(widget_pool());
+  widget_pool_set(NULL);
+#endif /*WITH_WIDGET_POOL*/
 
   assets_manager_destroy(assets_manager());
   assets_manager_set(NULL);

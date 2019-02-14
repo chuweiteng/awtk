@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  locale_info
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -30,7 +30,8 @@ BEGIN_C_DECLS
 /**
  * @class locale_info_t
  * @annotation ["scriptable"]
- * locale_info
+ * 本地化信息。提供字符串翻译数据管理，当前语言改变的事件通知等等。
+ *
  */
 typedef struct _locale_info_t {
   /**

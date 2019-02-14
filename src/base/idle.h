@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  idle manager
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,53 +22,36 @@
 #ifndef TK_IDLE_H
 #define TK_IDLE_H
 
-#include "tkc/array.h"
+#include "base/idle_manager.h"
 
 BEGIN_C_DECLS
-
-struct _idle_info_t;
-typedef struct _idle_info_t idle_info_t;
-
-typedef ret_t (*idle_func_t)(const idle_info_t* idle);
-
-struct _idle_info_t {
-  void* ctx;
-  uint32_t id;
-  idle_func_t on_idle;
-
-  bool_t pending_destroy;
-
-  void* on_destroy_ctx;
-  tk_destroy_t on_destroy;
-
-  struct _idle_info_t* next;
-};
-
-typedef struct _idle_manager_t {
-  bool_t dispatching;
-  uint32_t next_idle_id;
-
-  struct _idle_info_t* first;
-} idle_manager_t;
-
-idle_manager_t* idle_manager(void);
-ret_t idle_manager_set(idle_manager_t* idle_manager);
-
-idle_manager_t* idle_manager_create(void);
-idle_manager_t* idle_manager_init(idle_manager_t* idle_manager);
-ret_t idle_manager_deinit(idle_manager_t* idle_manager);
-ret_t idle_manager_destroy(idle_manager_t* idle_manager);
-
-ret_t idle_manager_dispatch(idle_manager_t* idle_manager);
-ret_t idle_manager_remove_all(idle_manager_t* idle_manager);
-ret_t idle_manager_remove(idle_manager_t* idle_manager, uint32_t idle_id);
-const idle_info_t* idle_manager_find(idle_manager_t* idle_manager, uint32_t idle_id);
-uint32_t idle_manager_add(idle_manager_t* idle_manager, idle_func_t on_idle, void* ctx);
 
 /**
  * @class idle_t
  * @annotation ["scriptable", "fake"]
- * idle函数在主循环中paint之后执行。
+ *
+ * idle可以看作是duration为0的定时器，不同的是idle函数在主循环中paint之后执行。
+ *
+ * > idle可以用来实现一些异步处理。
+ *
+ * 示例：
+ *
+ * ```c
+ * static ret_t something_on_idle(const idle_info_t* info) {
+ *   widget_t* widget = WIDGET(info->ctx);
+ *   edit_t* edit = EDIT(widget);
+ *   ...
+ *   return RET_REMOVE;
+ * }
+ *
+ * ...
+ *
+ * idle_add(something_on_idle, edit);
+ *
+ * ```
+ *
+ * > 在非GUI线程请用idle\_queue。
+ *
  */
 
 /**

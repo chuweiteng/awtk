@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  color_tile
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -42,6 +42,9 @@ static ret_t color_tile_get_prop(widget_t* widget, const char* name, value_t* v)
   if (tk_str_eq(name, WIDGET_PROP_BG_COLOR)) {
     value_set_str(v, color_tile->bg_color);
     return RET_OK;
+  } else if (tk_str_eq(name, WIDGET_PROP_VALUE)) {
+    value_set_uint32(v, color_tile->bg.color);
+    return RET_OK;
   } else if (tk_str_eq(name, WIDGET_PROP_BORDER_COLOR)) {
     value_set_str(v, color_tile->border_color);
     return RET_OK;
@@ -55,6 +58,10 @@ static ret_t color_tile_set_prop(widget_t* widget, const char* name, const value
 
   if (tk_str_eq(name, WIDGET_PROP_BG_COLOR)) {
     return color_tile_set_bg_color(widget, value_str(v));
+  } else if (tk_str_eq(name, WIDGET_PROP_VALUE)) {
+    color_t c;
+    c.color = value_int(v);
+    return color_tile_set_value(widget, c);
   } else if (tk_str_eq(name, WIDGET_PROP_BORDER_COLOR)) {
     return color_tile_set_border_color(widget, value_str(v));
   }
@@ -75,11 +82,10 @@ static const widget_vtable_t s_color_tile_vtable = {
     .on_paint_self = color_tile_on_paint_self};
 
 widget_t* color_tile_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  color_tile_t* color_tile = TKMEM_ZALLOC(color_tile_t);
-  widget_t* widget = WIDGET(color_tile);
+  widget_t* widget = widget_create(parent, &s_color_tile_vtable, x, y, w, h);
+  color_tile_t* color_tile = COLOR_TILE(widget);
   return_value_if_fail(color_tile != NULL, NULL);
 
-  widget_init(widget, parent, &s_color_tile_vtable, x, y, w, h);
   color_tile_set_bg_color(widget, "#ffffff");
   color_tile_set_border_color(widget, "#000000");
 
@@ -93,22 +99,16 @@ widget_t* color_tile_cast(widget_t* widget) {
 }
 
 ret_t color_tile_set_bg_color(widget_t* widget, const char* color) {
-  color_tile_t* color_tile = COLOR_TILE(widget);
-  return_value_if_fail(color_tile != NULL && color != NULL, RET_BAD_PARAMS);
+  return_value_if_fail(widget != NULL && color != NULL, RET_BAD_PARAMS);
 
-  color_tile->bg = color_parse_simple(color);
-  color_hex_str(color_tile->bg, color_tile->bg_color);
-
-  widget_invalidate(widget, NULL);
-
-  return RET_OK;
+  return color_tile_set_value(widget, color_parse(color));
 }
 
 ret_t color_tile_set_border_color(widget_t* widget, const char* color) {
   color_tile_t* color_tile = COLOR_TILE(widget);
   return_value_if_fail(color_tile != NULL && color != NULL, RET_BAD_PARAMS);
 
-  color_tile->border = color_parse_simple(color);
+  color_tile->border = color_parse(color);
   color_hex_str(color_tile->border, color_tile->border_color);
 
   widget_invalidate(widget, NULL);
@@ -120,10 +120,18 @@ ret_t color_tile_set_value(widget_t* widget, color_t color) {
   color_tile_t* color_tile = COLOR_TILE(widget);
   return_value_if_fail(color_tile != NULL, RET_BAD_PARAMS);
 
-  color_tile->bg = color;
-  color_hex_str(color_tile->bg, color_tile->bg_color);
+  if (color_tile->bg.color != color.color) {
+    event_t e = event_init(EVT_VALUE_WILL_CHANGE, widget);
+    widget_dispatch(widget, &e);
 
-  widget_invalidate(widget, NULL);
+    color_tile->bg = color;
+    color_hex_str(color_tile->bg, color_tile->bg_color);
+
+    e = event_init(EVT_VALUE_CHANGED, widget);
+    widget_dispatch(widget, &e);
+
+    widget_invalidate(widget, NULL);
+  }
 
   return RET_OK;
 }

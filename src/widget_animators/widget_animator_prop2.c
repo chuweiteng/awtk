@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  animate widget by change its 2 props.
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -57,8 +57,8 @@ widget_animator_t* widget_animator_prop2_create(widget_t* widget, uint32_t durat
 
   prop2 = (widget_animator_prop2_t*)animator;
   animator->update = widget_animator_prop2_update;
-  tk_strncpy(prop2->prop1_name, prop1_name, NAME_LEN);
-  tk_strncpy(prop2->prop2_name, prop2_name, NAME_LEN);
+  tk_strncpy(prop2->prop1_name, prop1_name, TK_NAME_LEN);
+  tk_strncpy(prop2->prop2_name, prop2_name, TK_NAME_LEN);
 
   return animator;
 }

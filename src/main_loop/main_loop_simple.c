@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  a simple main loop
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * this program is distributed in the hope that it will be useful,
  * but without any warranty; without even the implied warranty of
@@ -121,22 +121,20 @@ static ret_t main_loop_dispatch_events(main_loop_simple_t* loop) {
   while (main_loop_simple_recv_event(loop, &r) == RET_OK) {
     switch (r.event.type) {
       case EVT_POINTER_DOWN:
-        window_manager_dispatch_input_event(widget, (event_t*)&(r.pointer_event));
-        break;
       case EVT_POINTER_MOVE:
-        window_manager_dispatch_input_event(widget, (event_t*)&(r.pointer_event));
-        break;
       case EVT_POINTER_UP:
         window_manager_dispatch_input_event(widget, (event_t*)&(r.pointer_event));
         break;
-      case REQ_ADD_IDLE: {
+      case EVT_KEY_DOWN:
+      case EVT_KEY_UP:
+        window_manager_dispatch_input_event(widget, (event_t*)&(r.key_event));
+        break;
+      case REQ_ADD_IDLE:
         idle_add(r.add_idle.func, r.add_idle.e.target);
         break;
-      }
-      case REQ_ADD_TIMER: {
+      case REQ_ADD_TIMER:
         timer_add(r.add_timer.func, r.add_timer.e.target, r.add_timer.duration);
         break;
-      }
       default:
         break;
     }

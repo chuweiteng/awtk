@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  basic class of all widget
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,7 +26,9 @@
 #include "tkc/mem.h"
 #include "tkc/wstr.h"
 #include "tkc/value.h"
+#include "tkc/darray.h"
 #include "tkc/rect.h"
+#include "tkc/object.h"
 #include "tkc/emitter.h"
 
 #include "base/types_def.h"
@@ -37,7 +39,8 @@
 #include "base/theme.h"
 #include "base/layout_def.h"
 #include "base/widget_consts.h"
-#include "base/custom_props.h"
+#include "base/self_layouter.h"
+#include "base/children_layouter.h"
 
 BEGIN_C_DECLS
 
@@ -58,12 +61,13 @@ typedef ret_t (*widget_on_add_child_t)(widget_t* widget, widget_t* child);
 typedef ret_t (*widget_on_remove_child_t)(widget_t* widget, widget_t* child);
 typedef ret_t (*widget_on_layout_children_t)(widget_t* widget);
 typedef ret_t (*widget_get_prop_t)(widget_t* widget, const char* name, value_t* v);
+typedef ret_t (*widget_get_prop_default_value_t)(widget_t* widget, const char* name, value_t* v);
 typedef ret_t (*widget_set_prop_t)(widget_t* widget, const char* name, const value_t* v);
 typedef widget_t* (*widget_find_target_t)(widget_t* widget, xy_t x, xy_t y);
 typedef widget_t* (*widget_create_t)(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h);
-typedef ret_t (*widget_destroy_t)(widget_t* widget);
+typedef ret_t (*widget_on_destroy_t)(widget_t* widget);
 
-typedef struct _widget_vtable_t {
+struct _widget_vtable_t {
   uint32_t size;
   const char* type;
   /*克隆widget时需要复制的属性*/
@@ -82,9 +86,19 @@ typedef struct _widget_vtable_t {
    * 是否是设计窗口。
    */
   uint32_t is_designing_window : 1;
+  /**
+   * 是否是软键盘(点击软键盘不改变编辑器的焦点)。
+   */
+  uint32_t is_keyboard : 1;
+
+  /**
+   * 是否启用pool(如果启用pool，控件需要对其成员全部变量初始化，不能假定成员变量为0)。
+   */
+  uint32_t enable_pool : 1;
 
   widget_create_t create;
   widget_get_prop_t get_prop;
+  widget_get_prop_default_value_t get_prop_default_value;
   widget_set_prop_t set_prop;
   widget_on_keyup_t on_keyup;
   widget_on_keydown_t on_keydown;
@@ -103,8 +117,8 @@ typedef struct _widget_vtable_t {
   widget_on_remove_child_t on_remove_child;
   widget_on_event_t on_event;
   widget_find_target_t find_target;
-  widget_destroy_t destroy;
-} widget_vtable_t;
+  widget_on_destroy_t on_destroy;
+};
 
 /**
  * @class widget_t
@@ -127,8 +141,6 @@ typedef struct _widget_vtable_t {
  * 它负责控件的生命周期、通用状态、事件分发和Style的管理。
  * 本类提供的接口(函数和属性)除非特别说明，一般都适用于子类控件。
  *
- * > **widget_t**是抽象类，不要直接创建**widget_t**的实例。
- *
  * 为了便于解释，这里特别说明一下几个术语：
  *
  * * **父控件与子控件**：父控件与子控件指的两个控件的组合关系(这是在运行时决定的)。
@@ -148,6 +160,26 @@ typedef struct _widget_vtable_t {
  *
  *   子类控件 -> 父类控件[arrowhead = "empty"]
  *
+ * ```
+ *
+ * widget相关的函数都只能在GUI线程中执行，如果需在非GUI线程中想调用widget相关函数，
+ * 请用idle\_queue或timer\_queue进行串行化。
+ * 请参考[demo thread](https://github.com/zlgopen/awtk/blob/master/demos/demo_thread_app.c)
+ *
+ * **widget\_t**是抽象类，不要直接创建**widget\_t**的实例。控件支持两种创建方式：
+ *
+ * * 通过XML创建。如：
+ *
+ * ```xml
+ * <button x="c" y="m" w="80" h="30" text="OK"/>
+ * ```
+ *
+ * * 通过代码创建。如：
+ *
+ * ```c
+ *  widget_t* button = button_create(win, 10, 10, 128, 30);
+ *  widget_set_text(button, L"OK");
+ *  widget_on(button, EVT_CLICK, on_click, NULL);
  * ```
  *
  */
@@ -193,7 +225,7 @@ struct _widget_t {
    * @annotation ["set_prop","get_prop","readable","persitent","design","scriptable"]
    * style的名称。
    */
-  const char* style;
+  char* style;
   /**
    * @property {char*} animation
    * @annotation ["set_prop","get_prop","readable","persitent","design","scriptable"]
@@ -213,6 +245,12 @@ struct _widget_t {
    */
   uint8_t visible : 1;
   /**
+   * @property {bool_t} sensitive
+   * @annotation ["set_prop","get_prop","readable","writable","persitent","design","scriptable"]
+   * 是否接受用户事件。
+   */
+  uint8_t sensitive : 1;
+  /**
    * @property {bool_t} focused
    * @annotation ["readable"]
    * 是否得到焦点。
@@ -231,11 +269,17 @@ struct _widget_t {
    */
   uint8_t dirty : 1;
   /**
-   * @property {bool_t} need_relayout
-   * @annotation ["readable"]
-   * 标识控件是否需要重新layout。
+   * @property {bool_t} floating
+   * @annotation ["set_prop","get_prop","readable","persitent","design","scriptable"]
+   * 标识控件是否启用浮动布局，不受父控件的children_layout的控制。
    */
-  uint8_t need_relayout : 1;
+  uint8_t floating : 1;
+  /**
+   * @property {bool_t} need_relayout_children
+   * @annotation ["readable"]
+   * 标识控件是否需要重新layout子控件。
+   */
+  uint8_t need_relayout_children : 1;
   /**
    * @property {uint16_t} can_not_destroy
    * @annotation ["readable"]
@@ -253,7 +297,7 @@ struct _widget_t {
    * @annotation ["readable"]
    * 控件的状态(取值参考widget_state_t)。
    */
-  uint8_t state;
+  const char* state;
   /**
    * @property {uint8_t} opacity
    * @annotation ["readable"]
@@ -291,11 +335,11 @@ struct _widget_t {
    */
   widget_t* key_target;
   /**
-   * @property {array_t*} children
+   * @property {darray_t*} children
    * @annotation ["readable"]
    * 全部子控件。
    */
-  array_t* children;
+  darray_t* children;
   /**
    * @property {emitter_t*} emitter
    * @annotation ["readable"]
@@ -309,17 +353,24 @@ struct _widget_t {
    */
   style_t* astyle;
   /**
-   * @property {layout_params_t*} layout_params
-   * @annotation ["readable"]
-   * 布局参数。请参考[控件布局参数](https://github.com/zlgopen/awtk/blob/master/docs/layout.md)
+   * @property {children_layouter_t*} children_layout
+   * @annotation ["readable", "set_prop", "get_prop"]
+   * 子控件布局器。请参考[控件布局参数](https://github.com/zlgopen/awtk/blob/master/docs/layout.md)
    */
-  layout_params_t* layout_params;
+  children_layouter_t* children_layout;
   /**
-   * @property {custom_props_t*} custom_props
+   * @property {self_layouter_t*} self_layout
+   * @annotation ["readable", "set_prop", "get_prop"]
+   * 控件布局器。请参考[控件布局参数](https://github.com/zlgopen/awtk/blob/master/docs/layout.md)
+   */
+  self_layouter_t* self_layout;
+  /**
+   * @property {object_t*} custom_props
    * @annotation ["readable"]
    * 自定义属性。
    */
-  custom_props_t* custom_props;
+  object_t* custom_props;
+
   /**
    * @property {widget_vtable_t} vt
    * @annotation ["readable"]
@@ -518,6 +569,19 @@ ret_t widget_move_resize(widget_t* widget, xy_t x, xy_t y, wh_t w, wh_t h);
  * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
  */
 ret_t widget_set_value(widget_t* widget, int32_t value);
+
+/**
+ * @method widget_animate_value_to
+ * 设置控件的值(以动画形式变化到指定的值)。
+ * 只是对widget\_set\_prop的包装，值的意义由子类控件决定。
+ * @annotation ["scriptable"]
+ * @param {widget_t*} widget 控件对象。
+ * @param {int32_t}  value 值。
+ * @param {uint32_t}  duration 动画持续时间(毫秒)。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t widget_animate_value_to(widget_t* widget, int32_t value, uint32_t duration);
 
 /**
  * @method widget_add_value
@@ -770,11 +834,22 @@ ret_t widget_destroy_animator(widget_t* widget, const char* name);
  * 设置控件的可用性。
  * @annotation ["scriptable"]
  * @param {widget_t*} widget 控件对象。
- * @param {bool_t} enable 是否启动。
+ * @param {bool_t} enable 是否可用性。
  *
  * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
  */
 ret_t widget_set_enable(widget_t* widget, bool_t enable);
+
+/**
+ * @method widget_set_floating
+ * 设置控件的floating标志。
+ * @annotation ["scriptable"]
+ * @param {widget_t*} widget 控件对象。
+ * @param {bool_t} floating 是否启用floating布局。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t widget_set_floating(widget_t* widget, bool_t floating);
 
 /**
  * @method widget_set_focused
@@ -791,11 +866,11 @@ ret_t widget_set_focused(widget_t* widget, bool_t focused);
  * @method widget_set_state
  * 设置控件的状态。
  * @param {widget_t*} widget 控件对象。
- * @param {widget_state_t} state 状态。
+ * @param {const char*} state 状态(必须为真正的常量字符串，在widget的整个生命周期有效)。
  *
  * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
  */
-ret_t widget_set_state(widget_t* widget, widget_state_t state);
+ret_t widget_set_state(widget_t* widget, const char* state);
 
 /**
  * @method widget_set_opacity
@@ -905,11 +980,22 @@ widget_t* widget_lookup_by_type(widget_t* widget, const char* type, bool_t recur
 ret_t widget_set_visible(widget_t* widget, bool_t visible, bool_t recursive);
 
 /**
+ * @method widget_set_sensitive
+ * 设置控件是否接受用户事件。
+ * @annotation ["scriptable"]
+ * @param {widget_t*} widget 控件对象。
+ * @param {bool_t} sensitive 是否接受用户事件。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t widget_set_sensitive(widget_t* widget, bool_t sensitive);
+
+/**
  * @method widget_on
  * 注册指定事件的处理函数。
  * @annotation ["scriptable:custom"]
  * @param {widget_t*} widget 控件对象。
- * @param {event_type_t} type 事件类型。
+ * @param {uint32_t} type 事件类型。
  * @param {event_func_t} on_event 事件处理函数。
  * @param {void*} ctx 事件处理函数上下文。
  * 使用示例：
@@ -922,7 +1008,7 @@ ret_t widget_set_visible(widget_t* widget, bool_t visible, bool_t recursive);
  *
  * @return {int32_t} 返回id，用于widget_off。
  */
-int32_t widget_on(widget_t* widget, event_type_t type, event_func_t on_event, void* ctx);
+int32_t widget_on(widget_t* widget, uint32_t type, event_func_t on_event, void* ctx);
 
 /**
  * @method widget_off
@@ -941,27 +1027,27 @@ ret_t widget_off(widget_t* widget, int32_t id);
  * 递归查找指定名称的子控件，然后为其注册指定事件的处理函数。
  * @param {widget_t*} widget 控件对象。
  * @param {char*} name 子控件的名称。
- * @param {event_type_t} type 事件类型。
+ * @param {uint32_t} type 事件类型。
  * @param {event_func_t} on_event 事件处理函数。
  * @param {void*} ctx 事件处理函数上下文。
  *
  * @return {int32_t} 返回id，用于widget_off。
  */
-int32_t widget_child_on(widget_t* widget, const char* name, event_type_t type,
-                        event_func_t on_event, void* ctx);
+int32_t widget_child_on(widget_t* widget, const char* name, uint32_t type, event_func_t on_event,
+                        void* ctx);
 
 /**
  * @method widget_off_by_func
  * 注销指定事件的处理函数。
  * 仅用于辅助实现脚本绑定。
  * @param {widget_t*} widget 控件对象。
- * @param {event_type_t} type 事件类型。
+ * @param {uint32_t} type 事件类型。
  * @param {event_func_t} on_event 事件处理函数。
  * @param {void*} ctx 事件处理函数上下文。
  *
  * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
  */
-ret_t widget_off_by_func(widget_t* widget, event_type_t type, event_func_t on_event, void* ctx);
+ret_t widget_off_by_func(widget_t* widget, uint32_t type, event_func_t on_event, void* ctx);
 
 /**
  * @method widget_invalidate
@@ -1007,18 +1093,29 @@ ret_t widget_dispatch(widget_t* widget, event_t* e);
 
 /**
  * @method widget_get_prop
- * 通用的获取控件属性的函数。
+ * 获取控件指定属性的值。
  * @param {widget_t*} widget 控件对象。
  * @param {const char*} name 属性的名称。
- * @param {value_t*} v 属性的值。
+ * @param {value_t*} v 返回属性的值。
  *
  * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
  */
 ret_t widget_get_prop(widget_t* widget, const char* name, value_t* v);
 
 /**
+ * @method widget_get_prop_default_value
+ * 获取控件指定属性的缺省值(在持久化控件时，无需保存缺省值)。
+ * @param {widget_t*} widget 控件对象。
+ * @param {const char*} name 属性的名称。
+ * @param {value_t*} v 返回属性的缺省值。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t widget_get_prop_default_value(widget_t* widget, const char* name, value_t* v);
+
+/**
  * @method widget_set_prop
- * 通用的设置控件属性的函数。
+ * 设置控件指定属性的值。
  * @param {widget_t*} widget 控件对象。
  * @param {const char*} name 属性的名称。
  * @param {value_t*} v 属性的值。
@@ -1050,6 +1147,27 @@ ret_t widget_set_prop_str(widget_t* widget, const char* name, const char* v);
  * @return {const char*} 返回属性的值。
  */
 const char* widget_get_prop_str(widget_t* widget, const char* name, const char* defval);
+
+/**
+ * @method widget_set_prop_pointer
+ * 设置指针格式的属性。
+ * @param {widget_t*} widget 控件对象。
+ * @param {const char*} name 属性的名称。
+ * @param {void**} v 属性的值。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t widget_set_prop_pointer(widget_t* widget, const char* name, void* v);
+
+/**
+ * @method widget_get_prop_pointer
+ * 获取指针格式的属性。
+ * @param {widget_t*} widget 控件对象。
+ * @param {const char*} name 属性的名称。
+ *
+ * @return {void*} 返回属性的值。
+ */
+void* widget_get_prop_pointer(widget_t* widget, const char* name);
 
 /**
  * @method widget_set_prop_int
@@ -1193,53 +1311,6 @@ widget_t* widget_clone(widget_t* widget, widget_t* parent);
  * @return {bool_t} 返回TRUE表示相同，否则表示不同。
  */
 bool_t widget_equal(widget_t* widget, widget_t* other);
-
-/**
- * @method widget_set_self_layout_params
- * 设置widget自身的layout参数。
- * 请参考[控件布局参数](https://github.com/zlgopen/awtk/blob/master/docs/layout.md)
- * @annotation ["scriptable"]
- * @param {widget_t*} widget 控件对象。
- * @param {char*} x x布局参数
- * @param {char*} y y布局参数
- * @param {char*} w w布局参数
- * @param {char*} h h布局参数
- *
- * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
- */
-ret_t widget_set_self_layout_params(widget_t* widget, const char* x, const char* y, const char* w,
-                                    const char* h);
-
-/**
- * @method widget_set_children_layout_params
- * 设置widget子控件的layout参数。
- * 请参考[控件布局参数](https://github.com/zlgopen/awtk/blob/master/docs/layout.md)
- * @annotation ["scriptable"]
- * @param {widget_t*} widget 控件对象。
- * @param {char*} params 子控件布局参数(参考docs/layout.md)。
- *
- * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
- */
-ret_t widget_set_children_layout_params(widget_t* widget, const char* params);
-
-/**
- * @method widget_layout
- * 重新排版widget及其子控件。
- * @annotation ["scriptable"]
- * @param {widget_t*} widget 控件对象。
- *
- * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
- */
-ret_t widget_layout(widget_t* widget);
-
-/**
- * @method widget_layout_children
- * layout子控件。
- * @param {widget_t*} widget 控件对象。
- *
- * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
- */
-ret_t widget_layout_children(widget_t* widget);
 
 /**
  * @method widget_add_timer
@@ -1476,6 +1547,10 @@ ret_t widget_re_translate_text(widget_t* widget);
 /**
  * @method widget_init
  * 初始化控件。仅在子类控件构造函数中使用。
+ *
+ * > 请用widget\_create代替本函数。
+ *
+ * @depreated
  * @annotation ["private"]
  * @param {widget_t*} widget widget对象。
  * @param {widget_t*} parent widget的父控件。
@@ -1489,6 +1564,22 @@ ret_t widget_re_translate_text(widget_t* widget);
  */
 widget_t* widget_init(widget_t* widget, widget_t* parent, const widget_vtable_t* vt, xy_t x, xy_t y,
                       wh_t w, wh_t h);
+
+/**
+ * @method widget_create
+ * 创建控件。仅在子类控件构造函数中使用。
+ * @annotation ["private"]
+ * @param {widget_t*} parent widget的父控件。
+ * @param {widget_vtable_t*} vt 虚表。
+ * @param {xy_t}   x x坐标
+ * @param {xy_t}   y y坐标
+ * @param {wh_t}   w 宽度
+ * @param {wh_t}   h 高度
+ *
+ * @return {widget_t*} widget对象本身。
+ */
+widget_t* widget_create(widget_t* parent, const widget_vtable_t* vt, xy_t x, xy_t y, wh_t w,
+                        wh_t h);
 
 /**
  * @method widget_update_style
@@ -1505,11 +1596,12 @@ ret_t widget_update_style(widget_t* widget);
  * 把控件的状态转成获取style选要的状态，一般只在子类中使用。
  * @annotation ["private"]
  * @param {widget_t*} widget widget对象。
- * @param {bool_t} active 控件是否为当前项或选中项。
+ * @param {bool_t} active 控件是否为当前项。
+ * @param {bool_t} checked 控件是否为选中项。
  *
- * @return {widget_state_t} 返回状态值。
+ * @return {const char*} 返回状态值。
  */
-widget_state_t widget_get_state_for_style(widget_t* widget, bool_t active);
+const char* widget_get_state_for_style(widget_t* widget, bool_t active, bool_t checked);
 
 /**
  * @method widget_update_style_recursive
@@ -1520,6 +1612,62 @@ widget_state_t widget_get_state_for_style(widget_t* widget, bool_t active);
  * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
  */
 ret_t widget_update_style_recursive(widget_t* widget);
+
+/**
+ * @method widget_layout
+ * 布局当前控件及子控件。
+ * @annotation ["scriptable"]
+ * @param {widget_t*} widget widget对象。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t widget_layout(widget_t* widget);
+
+/**
+ * @method widget_layout_children
+ * layout子控件。
+ * @param {widget_t*} widget 控件对象。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t widget_layout_children(widget_t* widget);
+
+/**
+ * @method widget_set_self_layout
+ * 设置控件自己的布局参数。
+ * @annotation ["scriptable"]
+ * @param {widget_t*} widget 控件对象。
+ * @param {const char*} params 布局参数。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t widget_set_self_layout(widget_t* widget, const char* params);
+
+/**
+ * @method widget_set_children_layout
+ * 设置子控件的布局参数。
+ * @annotation ["scriptable"]
+ * @param {widget_t*} widget 控件对象。
+ * @param {const char*} params 布局参数。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t widget_set_children_layout(widget_t* widget, const char* params);
+
+/**
+ * @method widget_set_self_layout_params
+ * 设置控件自己的布局(缺省布局器)参数(过时，请用widget\_set\_self\_layout)。
+ * @annotation ["scriptable"]
+ * @param {widget_t*} widget 控件对象。
+ * @param {const char*} x x参数。
+ * @param {const char*} y y参数。
+ * @param {const char*} w w参数。
+ * @param {const char*} h h参数。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t widget_set_self_layout_params(widget_t* widget, const char* x, const char* y, const char* w,
+                                    const char* h);
 
 /*虚函数的包装*/
 ret_t widget_on_paint(widget_t* widget, canvas_t* c);
@@ -1536,6 +1684,8 @@ ret_t widget_on_paint_begin(widget_t* widget, canvas_t* c);
 ret_t widget_on_paint_end(widget_t* widget, canvas_t* c);
 
 #define WIDGET(w) ((widget_t*)(w))
+
+const char** widget_get_persistent_props(void);
 
 END_C_DECLS
 

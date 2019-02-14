@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  time_clock
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -183,7 +183,7 @@ static ret_t time_clock_on_timer(const timer_info_t* info) {
   return RET_REPEAT;
 }
 
-static ret_t time_clock_destroy(widget_t* widget) {
+static ret_t time_clock_on_destroy(widget_t* widget) {
   time_clock_t* time_clock = TIME_CLOCK(widget);
 
   TKMEM_FREE(time_clock->image);
@@ -291,7 +291,7 @@ static const widget_vtable_t s_time_clock_vtable = {
     .on_paint_self = time_clock_on_paint_self,
     .set_prop = time_clock_set_prop,
     .get_prop = time_clock_get_prop,
-    .destroy = time_clock_destroy};
+    .on_destroy = time_clock_on_destroy};
 
 static ret_t time_clock_reset_time(time_clock_t* time_clock) {
   date_time_t dt;
@@ -305,12 +305,9 @@ static ret_t time_clock_reset_time(time_clock_t* time_clock) {
 }
 
 widget_t* time_clock_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  time_clock_t* time_clock = TKMEM_ZALLOC(time_clock_t);
-  widget_t* widget = WIDGET(time_clock);
+  widget_t* widget = widget_create(parent, &s_time_clock_vtable, x, y, w, h);
+  time_clock_t* time_clock = TIME_CLOCK(widget);
   return_value_if_fail(time_clock != NULL, NULL);
-
-  return_value_if_fail(widget_init(widget, parent, &s_time_clock_vtable, x, y, w, h) != NULL,
-                       widget);
 
   time_clock_reset_time(time_clock);
   widget_add_timer(widget, time_clock_on_timer, 1000);

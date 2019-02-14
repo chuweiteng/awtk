@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  events structs
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,14 +27,6 @@ wheel_event_t* wheel_event_cast(event_t* event) {
   return_value_if_fail(event->type == EVT_WHEEL, NULL);
 
   return (wheel_event_t*)event;
-}
-
-prop_change_event_t* prop_change_event_cast(event_t* event) {
-  return_value_if_fail(event != NULL, NULL);
-  return_value_if_fail(event->type == EVT_PROP_CHANGED || event->type == EVT_PROP_WILL_CHANGE,
-                       NULL);
-
-  return (prop_change_event_t*)event;
 }
 
 pointer_event_t* pointer_event_cast(event_t* event) {
@@ -69,16 +61,6 @@ window_event_t* window_event_cast(event_t* event) {
   return (window_event_t*)event;
 }
 
-event_t event_init(uint32_t type, void* target) {
-  event_t e;
-
-  e.type = type;
-  e.target = target;
-  e.time = time_now_ms();
-
-  return e;
-}
-
 ret_t pointer_event_rotate(pointer_event_t* evt, system_info_t* info) {
   xy_t x = evt->x;
   xy_t y = evt->y;
@@ -95,8 +77,4 @@ ret_t pointer_event_rotate(pointer_event_t* evt, system_info_t* info) {
   }
 
   return RET_OK;
-}
-
-event_t* event_cast(event_t* event) {
-  return event;
 }

@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  animate widget by change its 2 props.
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -37,8 +37,8 @@ typedef struct _widget_animator_prop2_t {
   float_t to2;
   float_t from1;
   float_t from2;
-  char prop1_name[NAME_LEN + 1];
-  char prop2_name[NAME_LEN + 1];
+  char prop1_name[TK_NAME_LEN + 1];
+  char prop2_name[TK_NAME_LEN + 1];
 } widget_animator_prop2_t;
 
 /**

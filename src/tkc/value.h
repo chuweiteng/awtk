@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  generic value type
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,8 +21,8 @@
 
 #include "tkc/types_def.h"
 
-#ifndef VALUE_H
-#define VALUE_H
+#ifndef TK_VALUE_H
+#define TK_VALUE_H
 
 BEGIN_C_DECLS
 
@@ -111,16 +111,33 @@ typedef enum _value_type_t {
    * @const VALUE_TYPE_WSTRING
    * wchar_t*类型。
    */
-  VALUE_TYPE_WSTRING
+  VALUE_TYPE_WSTRING,
+  /**
+   * @const VALUE_TYPE_OBJECT
+   * object_t*类型。
+   */
+  VALUE_TYPE_OBJECT
 } value_type_t;
 
 /**
  * @class value_t
  * @annotation ["scriptable"]
- * 一个通用数据类型，用来存放整数、浮点数、obj_t、str_t和其它对象。
+ * 一个通用数据类型，用来存放整数、浮点数、字符串和其它对象。
+ *
+ * 在C/C++中，一般不需动态创建对象，直接声明并初始化即可。如：
+ *
+ * ```c
+ * value_t v;
+ * value_set_int(&v, 100);
+ * ```
+ *
+ *> 在脚本语言中，需要动态创建对象。
+ *
  */
-typedef struct _value_t {
-  uint8_t type;
+struct _value_t {
+  uint32_t type : 8;
+  uint32_t free_handle : 1;
+
   union {
     int8_t i8;
     uint8_t u8;
@@ -137,14 +154,9 @@ typedef struct _value_t {
     pointer_t ptr;
     const char* str;
     const wchar_t* wstr;
+    object_t* object;
   } value;
-} value_t;
-
-/**
- * @property {int8_t} type
- * @annotation ["readable", "scriptable"]
- * 类型。
- */
+};
 
 /**
  * @method value_set_bool
@@ -355,7 +367,7 @@ pointer_t value_pointer(const value_t* v);
 
 /**
  * @method value_set_float
- * 设置类型为float的值。
+ * 设置类型为float\_t的值。
  * @annotation ["scriptable"]
  * @param {value_t*} v     value对象。
  * @param {float_t}    value 待设置的值。
@@ -366,11 +378,11 @@ value_t* value_set_float(value_t* v, float_t value);
 
 /**
  * @method value_float
- * 获取类型为float的值。
+ * 获取类型为float\_t的值。
  * @annotation ["scriptable"]
  * @param {value_t*} v value对象。
  *
- * @return {float} 值。
+ * @return {float_t} 值。
  */
 float_t value_float(const value_t* v);
 
@@ -418,20 +430,41 @@ double value_double(const value_t* v);
 
 /**
  * @method value_set_str
- * 设置类型为char*的值。
- * @annotation ["scriptable"]
+ * 设置类型为字符串的值。
  * @param {value_t*} v     value对象。
- * @param {char*}   value 待设置的值。
+ * @param {const char*}   value 待设置的值。
  *
  * @return {value_t*} value对象本身。
  */
 value_t* value_set_str(value_t* v, const char* value);
 
+/**
+ * @method value_dup_str
+ * 设置类型为字符串的值(并拷贝字符串)。
+ *
+ * > 供脚本语言使用。
+ * @alias value_set_str
+ * @annotation ["scriptable"]
+ * @param {value_t*} v     value对象。
+ * @param {const char*}   value 待设置的值。
+ *
+ * @return {value_t*} value对象本身。
+ */
+value_t* value_dup_str(value_t* v, const char* value);
+
+/**
+ * @method value_set_wstr
+ * 设置类型为宽字符串的值。
+ * @param {value_t*} v     value对象。
+ * @param {const wchar_t*}   value 待设置的值。
+ *
+ * @return {value_t*} value对象本身。
+ */
 value_t* value_set_wstr(value_t* v, const wchar_t* value);
 
 /**
  * @method value_str
- * 获取类型为str_t的值。
+ * 获取类型为字符串的值。
  * @annotation ["scriptable"]
  * @param {value_t*} v value对象。
  *
@@ -439,6 +472,14 @@ value_t* value_set_wstr(value_t* v, const wchar_t* value);
  */
 const char* value_str(const value_t* v);
 
+/**
+ * @method value_wstr
+ * 获取类型为宽字符串的值。
+ * @annotation ["scriptable"]
+ * @param {value_t*} v value对象。
+ *
+ * @return {const wchar_t*} 值。
+ */
 const wchar_t* value_wstr(const value_t* v);
 
 /**
@@ -472,16 +513,6 @@ bool_t value_equal(const value_t* value, const value_t* other);
 int value_int(const value_t* v);
 
 /**
- * @method value_copy
- * 拷贝value的值。
- * @param {value_t*} dst 目的value对象。
- * @param {value_t*} src 源value对象。
- *
- * @return {void} 值。
- */
-void value_copy(value_t* dst, const value_t* src);
-
-/**
  * @method value_set_int
  * 设置类型为int的值。
  * @annotation ["scriptable"]
@@ -493,9 +524,50 @@ void value_copy(value_t* dst, const value_t* src);
 value_t* value_set_int(value_t* v, int32_t value);
 
 /**
+ * @method value_set_object
+ * 设置类型为object的值。
+ * @annotation ["scriptable"]
+ * @param {value_t*} v  value对象。
+ * @param {object_t*}  value 待设置的值。
+ *
+ * @return {value_t*} value对象本身。
+ */
+value_t* value_set_object(value_t* v, object_t* value);
+
+/**
+ * @method value_object
+ * 转换为object的值。
+ * @annotation ["scriptable", "constructor"]
+ * @param {value_t*} v value对象。
+ *
+ * @return {object_t*} 值。
+ */
+object_t* value_object(const value_t* v);
+
+/**
+ * @method value_copy
+ * 拷贝value的值。
+ * @param {value_t*} dst 目的value对象。
+ * @param {value_t*} src 源value对象。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t value_copy(value_t* dst, const value_t* src);
+
+/**
+ * @method value_deep_copy
+ * 深拷贝value的值。
+ * @param {value_t*} dst 目的value对象。
+ * @param {value_t*} src 源value对象。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t value_deep_copy(value_t* dst, const value_t* src);
+
+/**
  * @method value_create
  * @annotation ["constructor", "scriptable"]
- * 创建value对象
+ * 创建value对象。
  *
  * @return {value_t*} 对象。
  */
@@ -503,15 +575,36 @@ value_t* value_create(void);
 
 /**
  * @method value_destroy
- * @deconstructor
- * 销毁value对象
+ * 销毁value对象。
  * @annotation ["deconstructor", "scriptable"]
  * @param {value_t*} v value对象。
  *
- * @return {void}
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
  */
-void value_destroy(value_t* v);
+ret_t value_destroy(value_t* v);
+
+/**
+ * @method value_reset
+ * 重置value对象。
+ * @annotation ["deconstructor", "scriptable"]
+ * @param {value_t*} v value对象。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t value_reset(value_t* v);
+
+/**
+ * @method value_cast
+ * 转换为value对象。
+ *
+ * > 供脚本语言使用
+ * @annotation ["cast", "scriptable"]
+ * @param {value_t*} value value对象。
+ *
+ * @return {value_t*} 对象。
+ */
+value_t* value_cast(value_t* value);
 
 END_C_DECLS
 
-#endif
+#endif /*TK_VALUE_H*/

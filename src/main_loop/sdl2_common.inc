@@ -50,6 +50,10 @@ static ret_t main_loop_sdl2_dispatch_wheel_event(main_loop_simple_t* loop, SDL_E
   event.dx = sdl_event->wheel.x;
   event.dy = sdl_event->wheel.y;
 
+#ifdef MACOS
+  event.dy = -event.dy;
+#endif /*MACOS*/
+
   if (event.dy > 0) {
     event.dy = tk_max(MIN_WHEEL_DELTA, event.dy);
   } else if (event.dy < 0) {
@@ -106,9 +110,16 @@ static ret_t main_loop_sdl2_dispatch_mouse_event(main_loop_simple_t* loop, SDL_E
   return RET_OK;
 }
 
-static ret_t main_loop_sdl2_dispatch_window_resize(main_loop_simple_t* loop, uint32_t win_id, int w,
-                                                   int h) {
+static ret_t main_loop_sdl2_dispatch_window_resize(main_loop_simple_t* loop, uint32_t win_id,
+                                                   int new_w, int new_h) {
+  int w = 0;
+  int h = 0;
+  SDL_Window* win = SDL_GetWindowFromID(win_id);
+
+  SDL_GetWindowSize(win, &w, &h);
   lcd_resize(loop->base.canvas.lcd, w, h, 0);
+
+  log_debug("resize: win(%d %d) event(%d %d)\n", w, h, new_w, new_h);
   return window_manager_resize(loop->base.wm, w, h);
 }
 

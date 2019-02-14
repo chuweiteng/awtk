@@ -1,5 +1,6 @@
 ﻿#include "color_parser.h"
 #include "tkc/str.h"
+#include "tkc/mem.h"
 #include "tkc/utils.h"
 
 typedef struct _color_map_t {
@@ -209,7 +210,7 @@ static bool_t color_parse_hex(const char* color, uint8_t* r, uint8_t* g, uint8_t
   return TRUE;
 }
 
-bool_t color_parse(const char* color, uint8_t* r, uint8_t* g, uint8_t* b, uint8_t* a) {
+static bool_t color_parse_impl(const char* color, uint8_t* r, uint8_t* g, uint8_t* b, uint8_t* a) {
   str_t s;
   str_t* str;
   bool_t ret = FALSE;
@@ -243,13 +244,21 @@ bool_t color_parse(const char* color, uint8_t* r, uint8_t* g, uint8_t* b, uint8_
   return ret;
 }
 
-color_t color_parse_simple(const char* color) {
+color_t color_parse(const char* color) {
   uint8_t r = 0;
   uint8_t g = 0;
   uint8_t b = 0;
   uint8_t a = 0xff;
 
-  color_parse(color, &r, &g, &b, &a);
+  color_parse_impl(color, &r, &g, &b, &a);
 
   return color_init(r, g, b, a);
+}
+
+color_t* color_from_str(color_t* c, const char* str) {
+  return_value_if_fail(c != NULL && str != NULL, NULL);
+
+  *c = color_parse(str);
+
+  return c;
 }

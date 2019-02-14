@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  window manager
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -305,7 +305,8 @@ widget_t* window_manager_find_target(widget_t* widget, xy_t x, xy_t y) {
   xy_t r = iter->x + iter->w;
   xy_t b = iter->y + iter->h;
 
-  if (iter->visible && iter->enable && p.x >= iter->x && p.y >= iter->y && p.x <= r && p.y <= b) {
+  if (iter->visible && iter->sensitive && iter->enable && p.x >= iter->x && p.y >= iter->y &&
+      p.x <= r && p.y <= b) {
     return iter;
   }
 
@@ -332,7 +333,7 @@ static ret_t window_manager_paint_cursor(widget_t* widget, canvas_t* c) {
   window_manager_t* wm = WINDOW_MANAGER(widget);
 
   if (wm->cursor != NULL) {
-    return_value_if_fail(image_manager_load(image_manager(), wm->cursor, &bitmap) == RET_OK,
+    return_value_if_fail(image_manager_get_bitmap(image_manager(), wm->cursor, &bitmap) == RET_OK,
                          RET_BAD_PARAMS);
     canvas_draw_icon(c, &bitmap, wm->r_cursor.x, wm->r_cursor.y);
   }
@@ -590,7 +591,7 @@ static ret_t window_manager_set_prop(widget_t* widget, const char* name, const v
   return RET_NOT_FOUND;
 }
 
-static ret_t window_manager_destroy(widget_t* widget) {
+static ret_t window_manager_on_destroy(widget_t* widget) {
   window_manager_t* wm = WINDOW_MANAGER(widget);
 
   TKMEM_FREE(wm->cursor);
@@ -606,7 +607,7 @@ static const widget_vtable_t s_window_manager_vtable = {
     .on_paint_children = window_manager_on_paint_children,
     .on_remove_child = wm_on_remove_child,
     .find_target = window_manager_find_target,
-    .destroy = window_manager_destroy};
+    .on_destroy = window_manager_on_destroy};
 
 static ret_t wm_on_locale_changed(void* ctx, event_t* e) {
   widget_t* widget = WIDGET(ctx);
@@ -733,7 +734,7 @@ ret_t window_manager_set_cursor(widget_t* widget, const char* cursor) {
     bitmap_t bitmap;
     wm->cursor = tk_strdup(cursor);
 
-    return_value_if_fail(image_manager_load(image_manager(), cursor, &bitmap) == RET_OK,
+    return_value_if_fail(image_manager_get_bitmap(image_manager(), cursor, &bitmap) == RET_OK,
                          RET_BAD_PARAMS);
     wm->r_cursor.w = bitmap.w;
     wm->r_cursor.h = bitmap.h;

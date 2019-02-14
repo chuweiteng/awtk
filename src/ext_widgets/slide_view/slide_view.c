@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  slide_view
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -623,7 +623,7 @@ static ret_t slide_view_on_paint_children(widget_t* widget, canvas_t* c) {
   return RET_OK;
 }
 
-static ret_t slide_view_destroy(widget_t* widget) {
+static ret_t slide_view_on_destroy(widget_t* widget) {
   slide_view_t* slide_view = SLIDE_VIEW(widget);
   if (slide_view->timer_id) {
     timer_remove(slide_view->timer_id);
@@ -648,7 +648,7 @@ static const widget_vtable_t s_slide_view_vtable = {
     .find_target = slide_view_find_target,
     .on_paint_children = slide_view_on_paint_children,
     .on_paint_self = slide_view_on_paint_self,
-    .destroy = slide_view_destroy};
+    .on_destroy = slide_view_on_destroy};
 
 ret_t slide_view_set_active(widget_t* widget, uint32_t active) {
   slide_view_t* slide_view = SLIDE_VIEW(widget);
@@ -677,11 +677,7 @@ ret_t slide_view_set_vertical(widget_t* widget, bool_t vertical) {
 }
 
 widget_t* slide_view_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  slide_view_t* slide_view = TKMEM_ZALLOC(slide_view_t);
-  widget_t* widget = WIDGET(slide_view);
-  return_value_if_fail(slide_view != NULL, NULL);
-
-  return widget_init(widget, parent, &s_slide_view_vtable, x, y, w, h);
+  return widget_create(parent, &s_slide_view_vtable, x, y, w, h);
 }
 
 static ret_t slide_view_on_timer_next(const timer_info_t* timer) {

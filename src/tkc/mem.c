@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  simple memory manager
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -438,7 +438,11 @@ void* tk_calloc(uint32_t nmemb, uint32_t size, const char* func, uint32_t line) 
 void* tk_realloc(void* ptr, uint32_t size, const char* func, uint32_t line) {
   void* newptr = tk_realloc_impl(ptr, size);
 
-  if (newptr != ptr) {
+  if (newptr == ptr) {
+    return newptr;
+  }
+
+  if (ptr != NULL) {
     tk_remove_record(ptr);
   }
 

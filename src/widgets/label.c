@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  label
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -195,17 +195,17 @@ static ret_t label_set_prop(widget_t* widget, const char* name, const value_t* v
 
 static const widget_vtable_t s_label_vtable = {.size = sizeof(label_t),
                                                .type = WIDGET_TYPE_LABEL,
+                                               .enable_pool = TRUE,
                                                .create = label_create,
                                                .set_prop = label_set_prop,
                                                .get_prop = label_get_prop,
                                                .on_paint_self = label_on_paint_self};
 
 widget_t* label_create(widget_t* parent, xy_t x, xy_t y, wh_t w, wh_t h) {
-  label_t* label = TKMEM_ZALLOC(label_t);
-  widget_t* widget = WIDGET(label);
+  widget_t* widget = widget_create(parent, &s_label_vtable, x, y, w, h);
+  label_t* label = LABEL(widget);
   return_value_if_fail(label != NULL, NULL);
 
-  widget_init(widget, parent, &s_label_vtable, x, y, w, h);
   label->length = -1;
 
   return widget;

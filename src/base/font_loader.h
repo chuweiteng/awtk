@@ -3,7 +3,7 @@
  * Author: AWTK Develop Team
  * Brief:  font_loader interface
  *
- * Copyright (c) 2018 - 2018  Guangzhou ZHIYUAN Electronics Co.,Ltd.
+ * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -46,10 +46,12 @@ struct _font_loader_t {
 /**
  * @method font_loader_load
  * 加载字体。
+ *
  * @param {font_loader_t*} loader loader对象。
  * @param {const char*} name 字体名字。
  * @param {uint8_t*} buff 字体数据。
  * @param {uint32_t} size 字体数据长度。
+ *
  * @return {font_t*} 成功返回font，失败返回NULL。
  */
 font_t* font_loader_load(font_loader_t* loader, const char* name, const uint8_t* buff,
